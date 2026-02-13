@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Título da Aba -->
+    <title>GARQ Imóveis | Estratégia e Solidez Patrimonial</title>
+
+    <!-- Favicon (Ícone da Aba) -->
+    <link rel="icon" type="image/png" href="https://seu-site.com.br/favicon.png">
+    <link rel="apple-touch-icon" href="https://seu-site.com.br/favicon.png">
+
+    <!-- Metadados para Compartilhamento (WhatsApp/Redes Sociais) -->
+    <meta property="og:title" content="GARQ Imóveis | Estratégia e Solidez Patrimonial">
+    <meta property="og:description" content="Curadoria técnica de ativos imobiliários de alto padrão.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80">
+    <meta property="og:url" content="https://www.garqimoveis.com.br">
+    
+    <!-- Bibliotecas Externas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --gold: #c5a059;
+            --dark: #0a0a0a;
+            --light: #fdfdfd;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            /* Proteção: Impede seleção de texto */
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Permite seleção apenas em áreas de contato */
+        .allow-select {
+            -webkit-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        h1, h2, h3, h4, h5, .font-serif, .brand-logo {
+            font-family: 'Cinzel', serif;
+        }
+        .text-gold { color: var(--gold); }
+        .bg-gold { background-color: var(--gold); }
+        
+        #navbar {
+            transition: all 0.4s ease-in-out;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+        }
+
+        .brand-logo {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            line-height: 1;
+            text-shadow: 0 2px 8px rgba(0,0,0,1);
+        }
+        
+        .nav-scrolled {
+            background: rgba(10, 10, 10, 0.98) !important;
+            backdrop-filter: blur(15px);
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--gold);
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .brand-subtext {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.55rem;
+            letter-spacing: 0.7em;
+            color: var(--gold);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.6), rgba(10,10,10,0.9)), 
+                        url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover; background-position: center; z-index: -1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-10px);
+            background: rgba(197, 160, 89, 0.05);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden-page { display: none; }
+
+        /* Banner de Cookies LGPD */
+        #cookie-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            width: calc(100% - 40px);
+            max-width: 800px;
+            background: rgba(15, 15, 15, 0.98);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            backdrop-filter: blur(15px);
+            padding: 20px 30px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;" onkeydown="return disableF12(event);">
+
+    <!-- Navegação -->
+    <nav class="fixed w-full z-50 px-8 py-8" id="navbar">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="javascript:void(0)" onclick="showHome()" class="brand-logo text-white">
+                GARQ
+                <span class="brand-subtext">IMÓVEIS</span>
+            </a>
+            
+            <div class="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.25em] font-semibold text-white">
+                <a href="javascript:void(0)" onclick="showHome()" class="nav-link">Início</a>
+                <a href="#destaque" class="nav-link">Destaque</a>
+                <a href="#imoveis" class="nav-link">Portfólio</a>
+                <a href="#contato" class="nav-link">Contato</a>
+            </div>
+            
+            <a href="https://wa.me/5515998440267" target="_blank" class="bg-gold text-black px-8 py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-white transition duration-500 rounded-sm shadow-lg">
+                WhatsApp
+            </a>
+        </div>
+    </nav>
+
+    <main id="home-page" class="fade-in">
+        <!-- Secção Hero -->
+        <section id="inicio" class="relative h-screen flex items-center justify-center text-center px-6 overflow-hidden">
+            <div class="hero-bg"></div>
+            <div class="max-w-5xl z-10">
+                <span class="text-gold uppercase tracking-[0.9em] text-[11px] mb-8 block font-bold">Patrimônio • Estratégia • Solidez</span>
+                <h1 class="text-5xl md:text-8xl mb-10 leading-tight font-serif text-white">Imóveis com <br><span class="italic font-light opacity-80">Estratégia e Solidez.</span></h1>
+                <p class="text-base md:text-xl font-light mb-12 opacity-80 max-w-3xl mx-auto leading-relaxed text-white">
+                    Curadoria técnica especializada focada em ativos de alto padrão.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-6">
+                    <a href="#imoveis" class="bg-gold text-black px-14 py-5 font-bold uppercase text-[10px] tracking-[0.3em] hover:bg-white transition-all">Acessar Portfólio</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ativo em Destaque -->
+        <section id="destaque" class="py-32 bg-white text-black">
+            <div class="max-w-7xl mx-auto px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                    <div class="relative group">
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80" alt="Destaque" class="rounded-sm shadow-2xl transition duration-1000 group-hover:scale-[1.03]">
+                        <div class="absolute -bottom-8 -right-8 bg-gold text-black p-10 hidden md:block shadow-2xl">
+                            <p class="text-[9px] uppercase tracking-widest font-black mb-2 opacity-60">Status do Ativo</p>
+                            <p class="text-3xl font-serif">Disponível</p>
+                        </div>
+                    </div>
+                    <div class="lg:pl-10">
+                        <span class="text-gold uppercase tracking-[0.4em] text-[11px] font-black mb-6 block">Residência de Elite</span>
+                        <h2 class="text-4xl md:text-5xl mb-8 font-serif leading-tight">Mansão Solar | Fazenda Alvorada</h2>
+                        <div class="grid grid-cols-2 gap-10 mb-12">
+                            <div class="border-l-4 border-gold/20 pl-6">
+                                <span class="block text-[10px] uppercase text-gray-400 font-bold mb-1 tracking-widest">Área Total</span>
+                                <span class="text-xl font-serif">2.500 m²</span>
+                            </div>
+                            <div class="border-l-4 border-gold/20 pl-6">
+                                <span class="block text-[10px] uppercase text-gray-400 font-bold mb-1 tracking-widest">Tipologia</span>
+                                <span class="text-xl font-serif">06 Suítes</span>
+                            </div>
+                        </div>
+                        <a href="javascript:void(0)" onclick="openDetail('mansao-solar')" class="bg-black text-white px-12 py-6 text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-gold hover:text-black transition-all duration-500 shadow-xl inline-block">Consultar Detalhes</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfólio de Ativos -->
+        <section id="imoveis" class="py-32 bg-[#0a0a0a]">
+            <div class="max-w-7xl mx-auto px-8">
+                <div class="text-center mb-24">
+                    <span class="text-gold uppercase tracking-[0.5em] text-[10px] font-bold mb-4 block">Unidades Selecionadas</span>
+                    <h2 class="text-4xl md:text-5xl font-serif text-white uppercase tracking-tighter">Inventário de Ativos</h2>
+                </div>
+                <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"></div>
+            </div>
+        </section>
+
+        <!-- Canais de Contato -->
+        <section id="contato" class="py-32 bg-white text-black">
+            <div class="max-w-7xl mx-auto px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-24">
+                    <div>
+                        <span class="text-gold uppercase tracking-[0.5em] text-[10px] font-black mb-6 block">Gestão Exclusiva</span>
+                        <h2 class="text-4xl md:text-6xl font-serif mb-12 leading-tight">Canais de <br>Conexão</h2>
+                        
+                        <div class="space-y-8 allow-select">
+                            <!-- WhatsApp -->
+                            <a href="https://wa.me/5515998440267" target="_blank" class="flex items-center group">
+                                <div class="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full group-hover:bg-gold transition-colors mr-6">
+                                    <i data-lucide="phone"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">WhatsApp Business</p>
+                                    <p class="font-bold text-lg">(15) 99844-0267</p>
+                                </div>
+                            </a>
+
+                            <!-- E-mail -->
+                            <a href="mailto:contato@garqimoveis.com.br" class="flex items-center group">
+                                <div class="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full group-hover:bg-gold transition-colors mr-6">
+                                    <i data-lucide="mail"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">E-mail Oficial</p>
+                                    <p class="font-bold text-lg">contato@garqimoveis.com.br</p>
+                                </div>
+                            </a>
+
+                            <!-- Instagram -->
+                            <a href="https://instagram.com/garqimoveis" target="_blank" class="flex items-center group">
+                                <div class="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full group-hover:bg-gold transition-colors mr-6">
+                                    <i data-lucide="instagram"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Instagram</p>
+                                    <p class="font-bold text-lg">@garqimoveis</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Bloco LGPD -->
+                    <div class="bg-gray-50 p-12 border border-gray-100 flex flex-col justify-center">
+                        <h4 class="font-serif text-2xl mb-6 text-center italic">Atendimento Personalizado</h4>
+                        <p class="text-center text-sm text-gray-500 mb-8 leading-relaxed">
+                            Ao iniciar contato através dos nossos canais oficiais, você concorda com o tratamento de seus dados para fins exclusivos de atendimento imobiliário, conforme a <strong>LGPD (Lei 13.709/2018)</strong>.
+                        </p>
+                        <a href="https://wa.me/5515998440267" class="block w-full bg-black text-white text-center font-bold uppercase py-6 text-[10px] tracking-[0.4em] hover:bg-gold transition-all shadow-xl">
+                            Solicitar Atendimento Private
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Página de Detalhes Técnica (Interna) -->
+    <main id="detail-page" class="hidden-page pt-32 pb-24 bg-white text-black min-h-screen fade-in">
+        <div class="max-w-7xl mx-auto px-8">
+            <button onclick="showHome()" class="mb-12 flex items-center text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400 hover:text-gold transition">
+                ← Voltar para o Portfólio
+            </button>
+            <div id="detail-content" class="allow-select"></div>
+        </div>
+    </main>
+
+    <!-- Rodapé Profissional -->
+    <footer class="bg-black text-white pt-24 pb-12 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+                <!-- Branding -->
+                <div class="lg:col-span-1">
+                    <div class="brand-logo mb-6">GARQ<span class="brand-subtext">IMÓVEIS</span></div>
+                    <p class="text-xs text-gray-500 leading-relaxed font-light">
+                        Curadoria especializada em ativos de alto padrão. Estratégia, solidez e discrição na gestão do seu patrimônio imobiliário.
+                    </p>
+                </div>
+
+                <!-- Navegação -->
+                <div>
+                    <h5 class="text-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-8">Navegação</h5>
+                    <ul class="space-y-4 text-[11px] uppercase tracking-widest font-semibold text-gray-400">
+                        <li><a href="javascript:void(0)" onclick="showHome()" class="hover:text-gold transition">Início</a></li>
+                        <li><a href="#destaque" class="hover:text-gold transition">Destaque</a></li>
+                        <li><a href="#imoveis" class="hover:text-gold transition">Portfólio</a></li>
+                        <li><a href="#contato" class="hover:text-gold transition">Contato</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contato -->
+                <div>
+                    <h5 class="text-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-8">Contato</h5>
+                    <ul class="space-y-4 text-[11px] font-medium text-gray-400">
+                        <li class="flex items-center italic">
+                            <i data-lucide="map-pin" class="w-3 h-3 mr-3 text-gold"></i>
+                            Sorocaba / Interior SP
+                        </li>
+                        <li class="flex items-center">
+                            <i data-lucide="phone" class="w-3 h-3 mr-3 text-gold"></i>
+                            (15) 99844-0267
+                        </li>
+                        <li class="flex items-center">
+                            <i data-lucide="mail" class="w-3 h-3 mr-3 text-gold"></i>
+                            contato@garqimoveis.com.br
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Jurídico -->
+                <div>
+                    <h5 class="text-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-8">Jurídico</h5>
+                    <ul class="space-y-4 text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                        <li><a href="#" class="hover:text-white transition">Termos de Uso</a></li>
+                        <li><a href="#" class="hover:text-white transition">Privacidade & Cookies</a></li>
+                        <li><a href="#" class="hover:text-white transition">Política LGPD</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                <p class="text-[9px] uppercase tracking-[0.5em] text-white/20">
+                    © 2024 GARQ IMÓVEIS - Estratégia e Solidez Patrimonial
+                </p>
+                <div class="flex space-x-6">
+                    <a href="https://instagram.com/garqimoveis" target="_blank" class="text-white/30 hover:text-gold transition"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+                    <a href="https://wa.me/5515998440267" target="_blank" class="text-white/30 hover:text-gold transition"><i data-lucide="phone" class="w-4 h-4"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Banner Cookies -->
+    <div id="cookie-banner">
+        <div class="text-xs text-white/70 max-w-xl pr-4">
+            Este site utiliza cookies para melhorar sua experiência em conformidade com a <strong>LGPD</strong>.
+        </div>
+        <div class="flex gap-4">
+            <button onclick="acceptCookies()" class="bg-gold text-black text-[9px] font-black uppercase px-6 py-3 rounded-sm tracking-widest hover:bg-white transition">Aceitar</button>
+        </div>
+    </div>
+
+    <script>
+        // Inicializa ícones
+        lucide.createIcons();
+
+        // Dados dos Imóveis
+        const imoveisData = {
+            'mansao-solar': {
+                titulo: 'Mansão Solar | Fazenda Alvorada',
+                subtitulo: 'Residência de Elite • Interior de SP',
+                imagem: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+                descricao: 'Uma obra-prima arquitetônica que equilibra materiais naturais e design contemporâneo.',
+                detalhes: [
+                    { label: 'Área Terreno', value: '2.500 m²' },
+                    { label: 'Suítes', value: '06 Master' },
+                    { label: 'Vagas', value: '10 Carros' }
+                ]
+            },
+            'lote-vista-lago': {
+                titulo: 'Lote Vista Lago',
+                subtitulo: 'Ativo Estratégico • Terreno Premium',
+                imagem: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+                descricao: 'Oportunidade rara para construção personalizada com vista perene para o lago.',
+                detalhes: [
+                    { label: 'Área Total', value: '3.100 m²' },
+                    { label: 'Frente', value: '45 metros' },
+                    { label: 'Localização', value: 'Setor Gold' }
+                ]
+            },
+            'residencia-glass': {
+                titulo: 'Residência Glass',
+                subtitulo: 'Arquitetura Minimalista • São Paulo',
+                imagem: 'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80',
+                descricao: 'Transparência e luz definem esta residência urbana com o máximo em tecnologia.',
+                detalhes: [
+                    { label: 'Área Útil', value: '620 m²' },
+                    { label: 'Suítes', value: '04 Amplas' },
+                    { label: 'Diferencial', value: 'Rooftop Lounge' }
+                ]
+            }
+        };
+
+        const homePage = document.getElementById('home-page');
+        const detailPage = document.getElementById('detail-page');
+        const detailContent = document.getElementById('detail-content');
+        const cardsContainer = document.getElementById('cards-container');
+        const navbar = document.getElementById('navbar');
+
+        // Renderiza portfólio
+        function renderCards() {
+            cardsContainer.innerHTML = '';
+            Object.keys(imoveisData).forEach(key => {
+                const item = imoveisData[key];
+                const card = `
+                    <div class="glass-card group overflow-hidden cursor-pointer" onclick="openDetail('${key}')">
+                        <div class="h-80 overflow-hidden">
+                            <img src="${item.imagem}" alt="${item.titulo}" class="w-full h-full object-cover transition duration-1000 group-hover:scale-110">
+                        </div>
+                        <div class="p-8">
+                            <h3 class="text-xl font-serif text-white mb-2">${item.titulo}</h3>
+                            <p class="text-[10px] uppercase tracking-widest text-gold mb-6">${item.subtitulo}</p>
+                            <span class="text-gold text-[9px] uppercase tracking-[0.3em] font-bold">Ver Ficha Técnica →</span>
+                        </div>
+                    </div>
+                `;
+                cardsContainer.innerHTML += card;
+            });
+        }
+
+        // Navegação para Detalhes
+        function openDetail(id) {
+            const data = imoveisData[id];
+            if (!data) return;
+            const message = encodeURIComponent(`Olá, gostaria de saber mais sobre o ativo: ${data.titulo}`);
+            detailContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                    <img src="${data.imagem}" class="w-full h-auto shadow-xl" alt="Foto">
+                    <div>
+                        <span class="text-gold uppercase tracking-[0.5em] text-[11px] font-bold mb-4 block">${data.subtitulo}</span>
+                        <h2 class="text-4xl md:text-6xl font-serif mb-8 leading-tight">${data.titulo}</h2>
+                        <p class="text-gray-600 text-lg leading-relaxed mb-12 font-light italic">"${data.descricao}"</p>
+                        <div class="grid grid-cols-2 gap-8 mb-16">
+                            ${data.detalhes.map(d => `
+                                <div class="border-b border-gray-100 pb-4">
+                                    <span class="block text-[9px] uppercase text-gray-400 font-bold mb-1 tracking-widest">${d.label}</span>
+                                    <span class="text-xl font-medium">${d.value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <a href="https://wa.me/5515998440267?text=${message}" target="_blank" class="w-full bg-black text-white px-16 py-6 text-[11px] uppercase tracking-[0.4em] font-bold hover:bg-gold hover:text-black transition-all text-center block shadow-2xl">
+                            Consultar via WhatsApp
+                        </a>
+                    </div>
+                </div>
+            `;
+            homePage.classList.add('hidden-page');
+            detailPage.classList.remove('hidden-page');
+            window.scrollTo(0, 0);
+            navbar.classList.add('nav-scrolled');
+        }
+
+        function showHome() {
+            detailPage.classList.add('hidden-page');
+            homePage.classList.remove('hidden-page');
+            if (window.scrollY < 50) navbar.classList.remove('nav-scrolled');
+        }
+
+        // Lógica de Cookies
+        function acceptCookies() {
+            localStorage.setItem('cookies_accepted', 'true');
+            document.getElementById('cookie-banner').style.display = 'none';
+        }
+
+        window.onload = function() {
+            if (!localStorage.getItem('cookies_accepted')) {
+                document.getElementById('cookie-banner').style.display = 'flex';
+            }
+        };
+
+        // Proteções de Segurança
+        function disableF12(e) {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) {
+                return false;
+            }
+        }
+
+        // Efeito Navbar Scroll
+        window.addEventListener('scroll', () => {
+            if (!homePage.classList.contains('hidden-page')) {
+                if (window.scrollY > 50) navbar.classList.add('nav-scrolled');
+                else navbar.classList.remove('nav-scrolled');
+            }
+        });
+
+        // Inicialização
+        renderCards();
+    </script>
+</body>
+</html>
