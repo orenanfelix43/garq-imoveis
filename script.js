@@ -1,6 +1,3 @@
-// Inicializa ícones do Lucide
-lucide.createIcons();
-
 // Banco de Dados dos Imóveis
 const imoveisData = {
     'mansao-solar': {
@@ -44,25 +41,33 @@ const detailContent = document.getElementById('detail-content');
 const cardsContainer = document.getElementById('cards-container');
 const navbar = document.getElementById('navbar');
 
+// Inicializa ícones do Lucide
+function initIcons() {
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
+
 // Renderiza portfólio dinamicamente
 function renderCards() {
     if (!cardsContainer) return;
     cardsContainer.innerHTML = '';
     Object.keys(imoveisData).forEach(key => {
         const item = imoveisData[key];
-        const card = `
-            <div class="glass-card group overflow-hidden cursor-pointer" onclick="openDetail('${key}')">
-                <div class="h-80 overflow-hidden">
-                    <img src="${item.imagem}" alt="${item.titulo}" class="w-full h-full object-cover transition duration-1000 group-hover:scale-110">
-                </div>
-                <div class="p-8">
-                    <h3 class="text-xl font-serif text-white mb-2">${item.titulo}</h3>
-                    <p class="text-[10px] uppercase tracking-widest text-gold mb-6">${item.subtitulo}</p>
-                    <span class="text-gold text-[9px] uppercase tracking-[0.3em] font-bold">Ver Ficha Técnica →</span>
-                </div>
+        const card = document.createElement('div');
+        card.className = "glass-card group overflow-hidden cursor-pointer";
+        card.onclick = () => openDetail(key);
+        card.innerHTML = `
+            <div class="h-80 overflow-hidden">
+                <img src="${item.imagem}" alt="${item.titulo}" class="w-full h-full object-cover transition duration-1000 group-hover:scale-110">
+            </div>
+            <div class="p-8">
+                <h3 class="text-xl font-serif text-white mb-2">${item.titulo}</h3>
+                <p class="text-[10px] uppercase tracking-widest text-gold mb-6">${item.subtitulo}</p>
+                <span class="text-gold text-[9px] uppercase tracking-[0.3em] font-bold">Ver Ficha Técnica →</span>
             </div>
         `;
-        cardsContainer.innerHTML += card;
+        cardsContainer.appendChild(card);
     });
 }
 
@@ -70,10 +75,12 @@ function renderCards() {
 function openDetail(id) {
     const data = imoveisData[id];
     if (!data) return;
+    
     const message = encodeURIComponent(`Olá, gostaria de saber mais sobre o ativo: ${data.titulo}`);
+    
     detailContent.innerHTML = `
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            <img src="${data.imagem}" class="w-full h-auto shadow-xl" alt="Foto">
+            <img src="${data.imagem}" class="w-full h-auto shadow-xl rounded-sm" alt="Foto do Imóvel">
             <div>
                 <span class="text-gold uppercase tracking-[0.5em] text-[11px] font-bold mb-4 block">${data.subtitulo}</span>
                 <h2 class="text-4xl md:text-6xl font-serif mb-8 leading-tight">${data.titulo}</h2>
@@ -92,41 +99,58 @@ function openDetail(id) {
             </div>
         </div>
     `;
-    homePage.classList.add('hidden-page');
-    detailPage.classList.remove('hidden-page');
-    window.scrollTo(0, 0);
+
+    // Navegação entre seções
+    homePage.classList.add('hidden');
+    detailPage.classList.remove('hidden');
+    
+    // Força a barra de navegação a ficar escura na página de detalhes
     navbar.classList.add('nav-scrolled');
+    
+    window.scrollTo(0, 0);
+    initIcons();
 }
 
 function showHome() {
-    detailPage.classList.add('hidden-page');
-    homePage.classList.remove('hidden-page');
-    if (window.scrollY < 50) navbar.classList.remove('nav-scrolled');
+    detailPage.classList.add('hidden');
+    homePage.classList.remove('hidden');
+    
+    // Se estiver no topo, remove o fundo escuro da nav
+    if (window.scrollY < 50) {
+        navbar.classList.remove('nav-scrolled');
+    }
 }
 
 function acceptCookies() {
     localStorage.setItem('cookies_accepted', 'true');
-    document.getElementById('cookie-banner').style.display = 'none';
+    document.getElementById('cookie-banner').classList.add('hidden');
 }
 
-window.onload = function() {
+// Inicialização
+window.addEventListener('DOMContentLoaded', () => {
+    renderCards();
+    initIcons();
+
     if (!localStorage.getItem('cookies_accepted')) {
         const banner = document.getElementById('cookie-banner');
-        if(banner) banner.style.display = 'flex';
-    }
-};
-
-function disableF12(e) {
-    if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) {
-        return false;
-    }
-}
-
-window.addEventListener('scroll', () => {
-    if (homePage && !homePage.classList.contains('hidden-page')) {
-        if (window.scrollY > 50) navbar.classList.add('nav-scrolled');
-        else navbar.classList.remove('nav-scrolled');
+        if (banner) {
+            banner.classList.remove('hidden');
+            banner.classList.add('flex');
+        }
     }
 });
 
-renderCards();
+// Controle da Navbar no Scroll
+window.addEventListener('scroll', () => {
+    // Só altera a navbar se estiver na home page. 
+    // Na detail page ela deve ficar fixa escura.
+    if (!homePage.classList.contains('hidden')) {
+        if (window.scrollY > 50) {
+            navbar.classList.add('nav-scrolled');
+        } else {
+            navbar.classList.remove('nav-scrolled');
+        }
+    } else {
+        navbar.classList.add('nav-scrolled');
+    }
+});
