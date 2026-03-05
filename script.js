@@ -3,7 +3,7 @@ const imoveisData = {
     'mansao-solar': {
         titulo: 'Mansão Solar | Fazenda Alvorada',
         subtitulo: 'Residência de Elite • Interior de SP',
-        imagem: 'assets/carrosel.jpeg',
+        imagem: 'assets/Carrosel.jpeg',
         descricao: 'Uma obra-prima arquitetônica que equilibra materiais naturais e design contemporâneo.',
         detalhes: [
             { label: 'Área Terreno', value: '2.500 m²' },
