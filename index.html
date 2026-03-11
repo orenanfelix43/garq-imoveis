@@ -7,7 +7,6 @@
     
     <title>GARQ Imóveis | Estratégia e Solidez Patrimonial</title>
 
-    <!-- Ícone da Aba do Navegador (Favicon) -->
     <link rel="icon" type="image/jpeg" href="assets/ícone.jpeg">
 
     <!-- Metadados -->
@@ -21,7 +20,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Link para o CSS Externo -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body oncontextmenu="return false;">
@@ -33,10 +31,25 @@
                 <img src="assets/logo.png" alt="GARQ IMÓVEIS" class="logo-img">
             </a>
             
-            <div class="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.25em] font-semibold text-white">
+            <!-- Menu Desktop -->
+            <div class="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.25em] font-semibold text-white items-center">
                 <a href="javascript:void(0)" onclick="showHome()" class="nav-link">Início</a>
+                
+                <!-- Dropdown Portfólio -->
+                <div class="relative group">
+                    <a href="#imoveis" class="nav-link flex items-center gap-1 py-4">
+                        Portfólio <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </a>
+                    <div class="absolute top-full left-0 bg-black/95 backdrop-blur-md border border-white/10 p-6 min-w-[200px] flex flex-col gap-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-2xl">
+                        <button onclick="filterPortfolio('casa')" class="text-left hover:text-gold transition-colors">Casas</button>
+                        <button onclick="filterPortfolio('terreno')" class="text-left hover:text-gold transition-colors">Terrenos</button>
+                        <button onclick="filterPortfolio('apartamento')" class="text-left hover:text-gold transition-colors">Apartamentos</button>
+                        <hr class="border-white/10">
+                        <button onclick="filterPortfolio('todos')" class="text-left text-gold/60 hover:text-gold transition-colors italic">Ver Todos</button>
+                    </div>
+                </div>
+
                 <a href="#destaque" class="nav-link">Destaque</a>
-                <a href="#imoveis" class="nav-link">Portfólio</a>
                 <a href="#contato" class="nav-link">Contato</a>
                 <a href="#garqinvest" class="nav-link">GARQ Invest</a>
             </div>
@@ -47,7 +60,7 @@
         </div>
     </nav>
 
-    <!-- Página Inicial -->
+    <!-- Conteúdo Principal -->
     <main id="home-page" class="fade-in">
         <!-- Hero Section -->
         <section id="inicio" class="relative h-screen flex items-center justify-center text-center px-6 overflow-hidden">
@@ -88,72 +101,101 @@
                                 <span class="text-xl font-serif">06 Suítes</span>
                             </div>
                         </div>
-                        <a href="javascript:void(0)" onclick="openDetail('mansao-solar')" class="bg-black text-white px-12 py-6 text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-gold hover:text-black transition-all duration-500 shadow-xl inline-block">Consultar Detalhes</a>
+                        <button onclick="openDetail('mansao-solar')" class="bg-black text-white px-12 py-6 text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-gold hover:text-black transition-all duration-500 shadow-xl inline-block">Consultar Detalhes</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Portfólio -->
+        <!-- Portfólio com Vídeo -->
         <section id="imoveis" class="py-32 bg-[#0a0a0a]">
             <div class="max-w-7xl mx-auto px-8">
-                <div class="text-center mb-24">
+                <div class="text-center mb-12">
                     <span class="text-gold uppercase tracking-[0.5em] text-[10px] font-bold mb-4 block">Unidades Selecionadas</span>
-                    <h2 class="text-4xl md:text-5xl font-serif text-white uppercase tracking-tighter">Inventário de Ativos</h2>
+                    <h2 id="portfolio-title" class="text-4xl md:text-5xl font-serif text-white uppercase tracking-tighter">Inventário de Ativos</h2>
                 </div>
-                <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"></div>
+                
+                <!-- Filtros Rápidos -->
+                <div class="flex justify-center gap-4 mb-16 overflow-x-auto pb-4">
+                    <button onclick="filterPortfolio('todos')" class="filter-btn active" data-filter="todos">Todos</button>
+                    <button onclick="filterPortfolio('casa')" class="filter-btn" data-filter="casa">Casas</button>
+                    <button onclick="filterPortfolio('terreno')" class="filter-btn" data-filter="terreno">Terrenos</button>
+                    <button onclick="filterPortfolio('apartamento')" class="filter-btn" data-filter="apartamento">Apartamentos</button>
+                </div>
+
+                <!-- CONTAINER DO VÍDEO DINÂMICO -->
+                <div id="category-video-wrapper" class="transition-all duration-700 opacity-0 h-0 overflow-hidden mb-0">
+                </div>
+
+                <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 min-h-[400px]"></div>
             </div>
         </section>
 
-        <!-- Contato -->
-        <section id="contato" class="py-32 bg-white text-black">
+        <!-- RESTAURAÇÃO DA SEÇÃO DE CONTATO ORIGINAL -->
+        <section id="contato" class="py-32 bg-white text-black relative overflow-hidden">
             <div class="max-w-7xl mx-auto px-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-24">
                     <div>
                         <span class="text-gold uppercase tracking-[0.5em] text-[10px] font-black mb-6 block">Gestão Exclusiva</span>
                         <h2 class="text-4xl md:text-6xl font-serif mb-12 leading-tight">Canais de <br>Conexão</h2>
                         
-                        <div class="space-y-8">
-                            <a href="https://wa.me/5515998440267" target="_blank" class="flex items-center group">
-                                <div class="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full group-hover:bg-gold transition-colors mr-6">
-                                    <i data-lucide="phone" class="w-5 h-5"></i>
+                        <div class="space-y-10">
+                            <div class="flex items-start gap-8 group">
+                                <div class="w-14 h-14 bg-gray-50 flex items-center justify-center rounded-full border border-gray-100 transition-colors group-hover:border-gold/30">
+                                    <i data-lucide="mail" class="text-gold w-6 h-6"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">WhatsApp Business</p>
-                                    <p class="font-bold text-lg">(15) 99844-0267</p>
+                                    <p class="text-[10px] uppercase tracking-[0.3em] font-black text-gray-400 mb-2">E-mail Corporativo</p>
+                                    <p class="text-xl font-black">garqimoveis@gmail.com</p>
                                 </div>
-                            </a>
+                            </div>
+                            
+                            <div class="flex items-start gap-8 group">
+                                <div class="w-14 h-14 bg-gray-50 flex items-center justify-center rounded-full border border-gray-100 transition-colors group-hover:border-gold/30">
+                                    <i data-lucide="phone" class="text-gold w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] uppercase tracking-[0.3em] font-black text-gray-400 mb-2">WhatsApp Business</p>
+                                    <p class="text-xl font-black">(15) 99844-0267</p>
+                                </div>
+                            </div>
 
-                            <a href="https://www.instagram.com/garq.imoveis" target="_blank" class="flex items-center group">
-                                <div class="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full group-hover:bg-gold transition-colors mr-6">
-                                    <i data-lucide="instagram" class="w-5 h-5"></i>
+                            <div class="flex items-start gap-8 group">
+                                <div class="w-14 h-14 bg-gray-50 flex items-center justify-center rounded-full border border-gray-100 transition-colors group-hover:border-gold/30">
+                                    <i data-lucide="instagram" class="text-gold w-6 h-6"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Instagram Oficial</p>
-                                    <p class="font-bold text-lg">@garq.imoveis</p>
+                                    <p class="text-[10px] uppercase tracking-[0.3em] font-black text-gray-400 mb-2">Instagram</p>
+                                    <p class="text-xl font-black">@garq.imoveis</p>
                                 </div>
-                            </a>
-
-                            <a href="mailto:contato@garqimoveis.com.br" class="flex items-center group">
-                                <div class="w-12 h-12 bg-black text-white flex items-center justify-center rounded-full group-hover:bg-gold transition-colors mr-6">
-                                    <i data-lucide="mail" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <p class="text-[9px] uppercase tracking-widest text-gray-400 font-bold">E-mail Oficial</p>
-                                    <p class="font-bold text-lg">contato@garqimoveis.com.br</p>
-                                </div>
-                            </a>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="bg-gray-50 p-12 border border-gray-100 flex flex-col justify-center text-center lg:text-left">
-                        <h4 class="font-serif text-2xl mb-6 italic">Atendimento Personalizado</h4>
-                        <p class="text-gray-500 text-sm mb-8 leading-relaxed">Nossa equipe está pronta para oferecer uma consultoria estratégica para o seu próximo investimento imobiliário.</p>
-                        <a href="https://wa.me/5515998440267" class="block w-full bg-black text-white text-center font-bold uppercase py-6 text-[10px] tracking-[0.4em] hover:bg-gold transition-all shadow-xl">
-                            Solicitar Atendimento Private
-                        </a>
+                    <div class="relative">
+                        <div class="bg-gray-50 p-12 md:p-16 border border-gray-100 relative z-10">
+                            <i data-lucide="quote" class="text-gold/20 w-12 h-12 mb-8"></i>
+                            <h4 class="font-serif text-3xl mb-8 leading-snug">Atendimento <br><span class="italic">Private & Personalizado</span></h4>
+                            <p class="text-gray-500 text-base mb-12 leading-relaxed font-light">
+                                Nossa equipe técnica está preparada para oferecer uma consultoria estratégica, focada na segurança e rentabilidade do seu próximo ativo imobiliário.
+                            </p>
+                            <a href="https://wa.me/5515998440267" target="_blank" class="block w-full bg-black text-white text-center font-bold uppercase py-6 text-[10px] tracking-[0.4em] hover:bg-gold transition-all duration-500 shadow-2xl">
+                                Iniciar Consultoria Private
+                            </a>
+                        </div>
+                        <div class="absolute -bottom-6 -right-6 w-full h-full border-2 border-gold/10 -z-0"></div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Garq Invest -->
+        <section id="garqinvest" class="py-32 bg-[#0a0a0a] text-center border-t border-white/5">
+            <div class="max-w-3xl mx-auto px-8">
+                <i data-lucide="trending-up" class="w-12 h-12 text-gold mx-auto mb-8"></i>
+                <h2 class="text-3xl font-serif text-white mb-6">GARQ Invest</h2>
+                <p class="text-gray-400 font-light leading-relaxed mb-10">Inteligência aplicada ao mercado imobiliário para investidores que buscam rentabilidade e segurança patrimonial.</p>
+                <span class="text-gold text-[10px] uppercase tracking-[0.5em] font-bold">Em Breve - Nova Plataforma</span>
             </div>
         </section>
     </main>
@@ -168,7 +210,6 @@
         </div>
     </main>
 
-    <!-- Rodapé -->
     <footer class="bg-black text-white pt-24 pb-12 border-t border-white/5">
         <div class="max-w-7xl mx-auto px-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
@@ -183,39 +224,23 @@
                     <ul class="space-y-4 text-[11px] uppercase tracking-widest font-semibold text-gray-400">
                         <li><a href="javascript:void(0)" onclick="showHome()" class="hover:text-gold transition">Início</a></li>
                         <li><a href="#imoveis" class="hover:text-gold transition">Portfólio</a></li>
-                        <li><a href="https://www.instagram.com/garq.imoveis" target="_blank" class="hover:text-gold transition">Instagram</a></li>
                         <li><a href="#contato" class="hover:text-gold transition">Contato</a></li>
                     </ul>
                 </div>
                 <div>
                     <h5 class="text-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-8">Social</h5>
-                    <div class="flex space-x-6">
-                        <a href="https://www.instagram.com/garq.imoveis" target="_blank" class="text-gray-400 hover:text-gold transition">
-                            <i data-lucide="instagram"></i>
-                        </a>
-                        <a href="https://wa.me/5515998440267" target="_blank" class="text-gray-400 hover:text-gold transition">
-                            <i data-lucide="phone"></i>
-                        </a>
+                    <div class="flex gap-4">
+                        <a href="https://www.instagram.com/garq.imoveis" target="_blank" class="text-gray-400 hover:text-gold transition"><i data-lucide="instagram"></i></a>
+                        <a href="https://wa.me/5515998440267" target="_blank" class="text-gray-400 hover:text-gold transition"><i data-lucide="phone"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-                <p class="text-[9px] uppercase tracking-[0.5em] text-white/20">
-                    © 2026 GARQ IMÓVEIS - Estratégia e Solidez Patrimonial
-                </p>
+            <div class="pt-8 border-t border-white/5 text-[9px] uppercase tracking-[0.5em] text-white/20">
+                © 2026 GARQ IMÓVEIS - Estratégia e Solidez Patrimonial
             </div>
         </div>
     </footer>
 
-    <!-- Banner de Cookies -->
-    <div id="cookie-banner" class="hidden fixed bottom-8 left-8 right-8 md:left-auto md:w-96 bg-black border border-white/10 p-6 z-[100] flex-col gap-4">
-        <div class="text-xs text-white/70">
-            Utilizamos cookies conforme a <strong>LGPD</strong> para garantir a melhor experiência em nossa plataforma de curadoria.
-        </div>
-        <button onclick="acceptCookies()" class="bg-gold text-black text-[9px] font-black uppercase px-6 py-3 rounded-sm tracking-widest">Aceitar</button>
-    </div>
-
-    <!-- Scripts -->
     <script src="script.js"></script>
 </body>
 </html>
