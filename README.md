@@ -1,4 +1,5 @@
 🏢 GARQ Imóveis
+
 O GARQ Imóveis é uma plataforma moderna de gestão e visualização de propriedades, focada em proporcionar uma experiência fluida tanto para quem busca um novo lar quanto para corretores que gerenciam carteiras de imóveis.
 
 🚀 Tecnologias Utilizadas
