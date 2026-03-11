@@ -15,7 +15,7 @@ const imoveisData = {
         tipo: 'casa',
         titulo: 'Mansão Solar | Fazenda Alvorada',
         subtitulo: 'Residência de Elite • Interior de SP',
-        imagens: ['assets/carrosel.jpeg', 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'],
+        imagens: ['assets/Carrosel.jpeg', 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'],
         descricao: 'Uma obra-prima arquitetônica que equilibra materiais naturais e design contemporâneo.',
         detalhes: [{ label: 'Área Terreno', value: '2.500 m²' }, { label: 'Suítes', value: '06 Master' }]
     },
