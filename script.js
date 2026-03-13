@@ -4,9 +4,9 @@
  */
 
 const categoryVideos = {
-    'todos': 'https://vjs.zencdn.net/v/oceans.mp4',
-    'casa': 'https://www.w3schools.com/html/mov_bbb.mp4', 
-    'terreno': 'https://www.w3schools.com/html/movie.mp4', 
+    'todos': 'videos/Todos.mp4',
+    'casa': 'videos/AereoCasa.mp4', 
+    'terreno': 'videos/SuperiorTerreno.mp4', 
     'apartamento': 'https://vjs.zencdn.net/v/oceans.mp4' 
 };
 
