@@ -3,10 +3,13 @@
  * Ajuste: Redirecionamento automático no filtro e otimização de scroll.
  */
 
+// CONFIGURAÇÃO CLOUDFLARE R2
+const baseUrl = "https://pub-c3e6ea3b19da44d7b869d5d7b4eaf09b.r2.dev";
+
 const categoryVideos = {
-    'todos': 'videos/Todos.mp4',
-    'casa': 'videos/AereoCasa.mp4', 
-    'terreno': 'videos/SuperiorTerreno.mp4', 
+    'todos': `${baseUrl}/Todos.mp4`,
+    'casa': `${baseUrl}/AereoCasa.MP4`, 
+    'terreno': `${baseUrl}/SuperiorTerreno.MP4`, 
     'apartamento': 'https://vjs.zencdn.net/v/oceans.mp4' 
 };
 
@@ -15,7 +18,7 @@ const imoveisData = {
         tipo: 'casa',
         titulo: 'Mansão Solar | Fazenda Alvorada',
         subtitulo: 'Residência de Elite • Interior de SP',
-        imagens: ['assets/Carrosel.jpeg', 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'],
+        imagens: ['mansaosolar/1.webp'],
         descricao: 'Uma obra-prima arquitetônica que equilibra materiais naturais e design contemporâneo.',
         detalhes: [{ label: 'Área Terreno', value: '2.500 m²' }, { label: 'Suítes', value: '06 Master' }]
     },
@@ -212,3 +215,24 @@ window.addEventListener('DOMContentLoaded', () => {
     filterPortfolio('todos', false); // Não faz scroll no carregamento inicial
     initIcons();
 });
+
+function filter(cat) {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === cat);
+    });
+
+    if (nodes.video) {
+        // --- INÍCIO DA ALTERAÇÃO: Configurações para Cloudflare R2 ---
+        nodes.video.setAttribute('crossorigin', 'anonymous'); // Permite carregar vídeos de domínios externos (CORS)
+        nodes.video.src = categoryVideos[cat];
+        nodes.video.load(); // Força o recarregamento do player para a nova fonte
+        // --- FIM DA ALTERAÇÃO ---
+        
+        nodes.video.play().catch(e => console.log("Autoplay impedido:", e));
+    }
+    
+    nodes.videoTitle.innerText = cat === 'todos' ? 'Estratégia GARQ' : `Ativos: ${cat}s`;
+    nodes.videoCat.innerText = cat === 'todos' ? 'Portfólio Completo' : `Categoria: ${cat}`;
+    
+    renderGrid(cat);
+}

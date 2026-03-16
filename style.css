@@ -115,6 +115,6 @@ h1, h2, h3, h4, h5, .font-serif {
     .logo-img { height: 40px; }
     #navbar { padding: 1.5rem 1rem; }
     .hero-bg {
-        background-position: 65% center; /* Ajuste para centralizar o foco da imagem no mobile */
+        background-position: 6% right; /* Ajuste para centralizar o foco da imagem no mobile */
     }
 }

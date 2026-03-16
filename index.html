@@ -35,6 +35,8 @@
             <div class="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.25em] font-semibold text-white items-center">
                 <a href="javascript:void(0)" onclick="showHome()" class="nav-link">Início</a>
                 
+                <a href="#destaque" class="nav-link">Destaque</a>
+                
                 <!-- Dropdown Portfólio -->
                 <div class="relative group">
                     <a href="#imoveis" class="nav-link flex items-center gap-1 py-4">
@@ -49,7 +51,7 @@
                     </div>
                 </div>
 
-                <a href="#destaque" class="nav-link">Destaque</a>
+                <a href="#sobre" class="nav-link">Sobre</a>
                 <a href="#contato" class="nav-link">Contato</a>
                 <a href="#garqinvest" class="nav-link">GARQ Invest</a>
             </div>
@@ -131,6 +133,38 @@
             </div>
         </section>
 
+        <!-- SEÇÃO SOBRE NÓS (ADICIONADA) -->
+        <section id="sobre" class="py-32 bg-gray-50 text-black border-t border-gray-100">
+            <div class="max-w-7xl mx-auto px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                    <!-- Conteúdo de Texto à Esquerda (Inversão visual para ritmo de scroll) -->
+                    <div class="lg:pr-10 order-2 lg:order-1">
+                        <span class="text-gold uppercase tracking-[0.4em] text-[11px] font-black mb-6 block">Nossa Identidade</span>
+                        <h2 class="text-4xl md:text-5xl mb-8 font-serif leading-tight">Especialistas em <br><span class="italic font-light">Patrimônio Real</span></h2>
+                        <p class="text-gray-600 text-lg mb-8 leading-relaxed font-light">
+                            A GARQ Imóveis não é apenas uma imobiliária, é uma consultoria estratégica de ativos. Combinamos análise técnica, visão de mercado e um atendimento <i>private</i> para garantir que cada aquisição seja um pilar sólido na construção do seu patrimônio.
+                        </p>
+                        <div class="flex items-center gap-6 py-4 border-y border-gray-200 mb-8">
+                            <div>
+                                <p class="text-3xl font-serif text-gold">10+</p>
+                                <p class="text-[9px] uppercase tracking-widest font-bold text-gray-400">Anos de Expertise</p>
+                            </div>
+                            <div class="w-px h-12 bg-gray-200"></div>
+                            <div>
+                                <p class="text-3xl font-serif text-gold">High</p>
+                                <p class="text-[9px] uppercase tracking-widest font-bold text-gray-400">Standard Quality</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Imagem à Direita -->
+                    <div class="relative group order-1 lg:order-2">
+                        <img src="assets/sobrenos.jpeg" alt="Equipe GARQ Imóveis" class="rounded-sm shadow-2xl transition duration-1000 group-hover:scale-[1.02] grayscale hover:grayscale-0">
+                        <div class="absolute -top-4 -left-4 w-24 h-24 border-t-2 border-l-2 border-gold opacity-30"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- RESTAURAÇÃO DA SEÇÃO DE CONTATO ORIGINAL COM REDIRECIONAMENTOS -->
         <section id="contato" class="py-32 bg-white text-black relative overflow-hidden">
             <div class="max-w-7xl mx-auto px-8">
@@ -206,7 +240,7 @@
     <!-- Página de Detalhes -->
     <main id="detail-page" class="hidden pt-40 pb-24 bg-white text-black min-h-screen fade-in">
         <div class="max-w-7xl mx-auto px-8">
-            <button onclick="showHome()" class="mb-12 flex items-center text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400 hover:text-gold transition">
+            <button onclick="filterPortfolio('todos')" class="mb-12 flex items-center text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400 hover:text-gold transition">
                 <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Voltar para o Portfólio
             </button>
             <div id="detail-content"></div>
