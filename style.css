@@ -13,7 +13,7 @@
 
 /* Forçamos títulos a usarem a Cinzel */
 h1, h2, h3, h4, h5, .font-serif {
-    font-family: var(--font-serif) !important;
+    font-family: var(--font-sans) !important;
 }
 
 /* Resto do código permanece inalterado */

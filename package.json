@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "tailwind:init": "tailwindcss init",
     "tailwind:build": "tailwindcss -i ./style.css -o ./dist/output.css",
-    "build": "tailwindcss -i ./style.css -o ./dist/output.css --minify",
-    "dev": "tailwindcss -i ./style.css -o ./dist/output.css --watch"
+    "build": "npx tailwindcss -i ./style.css -o ./dist/output.css --minify",
+    "dev": "npx tailwindcss -i ./style.css -o ./dist/output.css --watch"
   },
   "keywords": [],
   "author": "",
