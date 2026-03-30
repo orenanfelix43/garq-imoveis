@@ -9,13 +9,17 @@
     <title>GARQ Imóveis | Estratégia e Solidez Patrimonial</title>
 
     <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="canonical" href="https://garqimoveis.com.br/">
 
     <!-- ✅ CORREÇÃO 4: Meta description adicionada -->
     <meta name="description"
-        content="GARQ Imóveis — curadoria técnica especializada em ativos imobiliários de alto padrão. Casas, terrenos e apartamentos premium com estratégia e solidez patrimonial.">
+        content="Explore imóveis de alto padrão e coberturas exclusivas. Experiência personalizada em investimentos imobiliários de luxo nas localizações mais nobres. Confira.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://garq-imoveis.vercel.app/assets/favicon.png">
 
     <!-- Open Graph completo -->
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="GARQ Imóveis">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:title" content="GARQ Imóveis | Estratégia e Solidez Patrimonial">
     <meta property="og:description" content="Curadoria técnica de ativos imobiliários de alto padrão.">
@@ -26,7 +30,8 @@
     <!-- Bibliotecas Externas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="dist/output.css">
     <link rel="stylesheet" href="style.css">
 
@@ -39,7 +44,7 @@
     <!-- Navegação -->
     <nav class="fixed w-full z-50 px-8 py-8 transition-all duration-500" id="navbar">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="javascript:void(0)" onclick="showHome()" class="brand-logo flex items-center">
+            <a href="#inicio" class="nav-link brand-logo flex items-center">
                 <img src="assets/logo.webp" alt="GARQ IMÓVEIS" class="logo-img">
             </a>
 
@@ -74,7 +79,7 @@
                 <a href="#garqinvest" class="nav-link">GARQ Invest</a>
             </div>
 
-            <a href="https://wa.me/5515998440267" target="_blank"
+            <a href="https://wa.me/5515998440267" target="_blank" rel="noopener noreferrer"
                 class="font-sans bg-gold text-black px-8 py-3 text-[10px] uppercase tracking-[0.2em] font-black hover:bg-white transition duration-500 rounded-sm shadow-lg">
                 WhatsApp
             </a>
@@ -109,8 +114,8 @@
             <div class="max-w-7xl mx-auto px-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                     <div class="relative group">
-                        <img src="assets/carrosel.webp" alt="Destaque"
-                            class="rounded-sm shadow-2xl transition duration-1000 group-hover:scale-[1.03]">
+                        <img src="assets/carrosel.webp" alt="Mansão Solar — fachada principal" width="800" height="600"
+                            loading="lazy">
                         <div class="absolute -bottom-8 -right-8 bg-gold text-black p-10 hidden md:block shadow-2xl">
                             <p class="text-[9px] uppercase tracking-widest font-black mb-2 opacity-60">Status do Ativo
                             </p>
@@ -257,7 +262,7 @@
                             </a>
 
                             <!-- WhatsApp -->
-                            <a href="https://wa.me/5515998440267" target="_blank"
+                            <a href="https://wa.me/5515998440267" target="_blank" rel="noopener noreferrer"
                                 class="flex items-start gap-8 group transition-all hover:translate-x-2">
                                 <div
                                     class="w-14 h-14 bg-gray-50 flex items-center justify-center rounded-full border border-gray-100 transition-colors group-hover:border-gold/30">
@@ -272,7 +277,7 @@
                             </a>
 
                             <!-- Instagram -->
-                            <a href="https://www.instagram.com/garq.imoveis" target="_blank"
+                            <a href="https://www.instagram.com/garq.imoveis" target="_blank" rel="noopener noreferrer"
                                 class="flex items-start gap-8 group">
                                 <div class="w-14 h-14 bg-gray-50 flex items-center justify-center rounded-full">
                                     <i data-lucide="instagram" class="text-gold w-6 h-6"></i>
@@ -295,7 +300,7 @@
                                 Nossa equipe técnica está preparada para oferecer uma consultoria estratégica, focada na
                                 segurança e rentabilidade do seu próximo ativo imobiliário.
                             </p>
-                            <a href="https://wa.me/5515998440267" target="_blank"
+                            <a href="https://wa.me/5515998440267" target="_blank" rel="noopener noreferrer"
                                 class="block w-full bg-black text-white text-center font-bold uppercase py-6 text-[10px] tracking-[0.4em] hover:bg-gold transition-all duration-500 shadow-2xl">
                                 Iniciar Consultoria Private
                             </a>
@@ -320,7 +325,7 @@
     </main>
 
     <!-- Página de Detalhes -->
-    <main id="detail-page" class="hidden pt-40 pb-24 bg-white text-black min-h-screen fade-in">
+    <section id="detail-page" class="hidden pt-40 pb-24 bg-white text-black min-h-screen fade-in">
         <div class="max-w-7xl mx-auto px-8">
             <button onclick="filterPortfolio('todos')"
                 class="mb-12 flex items-center text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400 hover:text-gold transition">
@@ -328,7 +333,7 @@
             </button>
             <div id="detail-content"></div>
         </div>
-    </main>
+    </section>
 
     <footer class="bg-black text-white pt-24 pb-12 border-t border-white/5">
         <div class="max-w-7xl mx-auto px-8">
@@ -343,8 +348,7 @@
                 <div>
                     <h5 class="text-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-8">Navegação</h5>
                     <ul class="space-y-4 text-[11px] uppercase tracking-widest font-semibold text-gray-400">
-                        <li><a href="javascript:void(0)" onclick="showHome()"
-                                class="hover:text-gold transition">Início</a></li>
+                        <li><a href="#inicio" class="nav-link" class="hover:text-gold transition">Início</a></li>
                         <li><a href="#imoveis" class="hover:text-gold transition">Portfólio</a></li>
                         <li><a href="#contato" class="hover:text-gold transition">Contato</a></li>
                     </ul>
@@ -352,9 +356,9 @@
                 <div>
                     <h5 class="text-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-8">Social</h5>
                     <div class="flex gap-4">
-                        <a href="https://www.instagram.com/garq.imoveis" target="_blank"
+                        <a href="https://www.instagram.com/garq.imoveis" target="_blank" rel="noopener noreferrer"
                             class="text-gray-400 hover:text-gold transition"><i data-lucide="instagram"></i></a>
-                        <a href="https://wa.me/5515998440267" target="_blank"
+                        <a href="https://wa.me/5515998440267" target="_blank" rel="noopener noreferrer"
                             class="text-gray-400 hover:text-gold transition"><i data-lucide="phone"></i></a>
                         <a href="mailto:garq.imoveis@gmail.com" class="text-gray-400 hover:text-gold transition"><i
                                 data-lucide="mail"></i></a>

@@ -11,12 +11,9 @@
     --light: #fdfdfd;
 }
 
-/* Forçamos títulos a usarem a Cinzel */
 h1, h2, h3, h4, h5, .font-serif {
-    font-family: var(--font-sans) !important;
+    font-family: var(--font-sans-serif) !important;
 }
-
-/* Resto do código permanece inalterado */
 
 .text-gold {
     color: var(--gold);
@@ -86,7 +83,7 @@ h1, h2, h3, h4, h5, .font-serif {
     background: rgba(197, 160, 89, 0.05);
 }
 
-/* Hero Section Otimizada */
+/* Hero Section */
 .hero-bg {
     position: absolute;
     top: 0;
@@ -102,13 +99,8 @@ h1, h2, h3, h4, h5, .font-serif {
 }
 
 @keyframes zoomHero {
-    from {
-        transform: scale(1);
-    }
-
-    to {
-        transform: scale(1.05);
-    }
+    from { transform: scale(1); }
+    to   { transform: scale(1.05); }
 }
 
 /* Cartões de Imóveis */
@@ -130,18 +122,11 @@ h1, h2, h3, h4, h5, .font-serif {
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(15px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(15px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsividade Hero */
+/* Responsividade */
 @media (max-width: 768px) {
     .logo-img {
         height: 40px;
@@ -153,6 +138,5 @@ h1, h2, h3, h4, h5, .font-serif {
 
     .hero-bg {
         background-position: 100% center;
-        /* Ajuste para centralizar o foco da imagem no mobile */
     }
 }
