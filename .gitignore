@@ -1,0 +1,10 @@
+# Dependências (Nunca suba essa pasta!)
+node_modules/
+
+# Arquivos gerados pelo build (A Vercel vai gerar no servidor)
+dist/
+
+# Arquivos de log e sistema
+npm-debug.log*
+.DS_Store
+Thumbs.db

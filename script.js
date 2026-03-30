@@ -1,16 +1,10 @@
-/**
- * GARQ Imóveis - Script de Performance v2.6
- * Ajuste: Redirecionamento automático no filtro e otimização de scroll.
- */
-
-// CONFIGURAÇÃO CLOUDFLARE R2
 const baseUrl = "https://pub-c3e6ea3b19da44d7b869d5d7b4eaf09b.r2.dev";
 
 const categoryVideos = {
     'todos': `${baseUrl}/Todos.mp4`,
-    'casa': `${baseUrl}/AereoCasa.MP4`, 
-    'terreno': `${baseUrl}/SuperiorTerreno.MP4`, 
-    'apartamento': 'https://vjs.zencdn.net/v/oceans.mp4' 
+    'casa': `${baseUrl}/AereoCasa.MP4`,
+    'terreno': `${baseUrl}/SuperiorTerreno.MP4`,
+    'apartamento': 'https://vjs.zencdn.net/v/oceans.mp4'
 };
 
 const imoveisData = {
@@ -32,15 +26,30 @@ const imoveisData = {
     }
 };
 
-const nodes = {
-    home: document.getElementById('home-page'),
-    detail: document.getElementById('detail-page'),
-    detailContent: document.getElementById('detail-content'),
-    container: document.getElementById('cards-container'),
-    navbar: document.getElementById('navbar'),
-    title: document.getElementById('portfolio-title'),
-    videoWrapper: document.getElementById('category-video-wrapper')
-};
+let nodes = {};
+
+function mapNodes() {
+    nodes = {
+        home: document.getElementById('home-page'),
+        detail: document.getElementById('detail-page'),
+        detailContent: document.getElementById('detail-content'),
+        container: document.getElementById('cards-container'),
+        navbar: document.getElementById('navbar'),
+        title: document.getElementById('portfolio-title'),
+        videoWrapper: document.getElementById('category-video-wrapper'),
+        videoElement: document.getElementById('main-category-video'),
+        videoLabel: document.getElementById('video-label'),
+        videoTitle: document.getElementById('video-title')
+    };
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    mapNodes(); // Mapeia os elementos apenas quando o HTML carregar
+    if (nodes.home) {
+        filterPortfolio('todos', false);
+        initIcons();
+    }
+});
 
 let currentSlide = 0;
 let slideInterval;
@@ -50,34 +59,31 @@ function initIcons() {
 }
 
 function updateCategoryVideo(filterType) {
-    if (!nodes.videoWrapper) return;
+    if (!nodes.videoWrapper || !nodes.videoElement) return;
+
     const videoSrc = categoryVideos[filterType] || categoryVideos['todos'];
-    const displayLabel = filterType === 'todos' ? 'Institucional' : filterType;
+    const displayLabel = `Experiência GARQ • ${filterType === 'todos' ? 'Institucional' : filterType}`;
     const mainTitle = filterType === 'todos' ? 'Estratégia e Solidez' : `${filterType}s Exclusivos`;
 
-    nodes.videoWrapper.classList.remove('h-0', 'mb-0');
+    // 1. Mostramos o container (se estiver escondido)
+    nodes.videoWrapper.classList.remove('h-0', 'mb-0', 'opacity-0');
     nodes.videoWrapper.classList.add('h-[280px]', 'md:h-[450px]', 'opacity-100', 'mb-16');
 
-    nodes.videoWrapper.innerHTML = `
-        <div class="relative w-full h-full overflow-hidden rounded-sm shadow-2xl bg-black border border-white/5 group">
-            <video src="${videoSrc}" autoplay muted loop playsinline class="w-full h-full object-cover opacity-40 transition-transform duration-[20s] group-hover:scale-110"></video>
-            <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/80 via-transparent to-black/20">
-                <div class="fade-in">
-                    <span class="text-gold uppercase tracking-[0.6em] text-[10px] font-bold mb-4 block opacity-80">Experiência GARQ • ${displayLabel}</span>
-                    <h3 class="text-white text-3xl md:text-5xl font-serif uppercase tracking-tighter mb-6">${mainTitle}</h3>
-                    <div class="w-16 h-[1px] bg-gold/40 mx-auto"></div>
-                </div>
-            </div>
-        </div>
-    `;
-}
+    // 2. Atualizamos apenas o que mudou (ATUALIZAÇÃO CIRÚRGICA)
+    if (nodes.videoElement.src !== videoSrc) {
+        nodes.videoElement.src = videoSrc;
+        nodes.videoElement.load(); // Força o carregamento da nova fonte
+    }
 
+    nodes.videoLabel.textContent = displayLabel; // Seguro
+    nodes.videoTitle.textContent = mainTitle;     // Seguro
+}
 /**
  * Filtra o portfólio e realiza o scroll automático se solicitado
  */
 function filterPortfolio(filterType = 'todos', shouldScroll = true) {
     if (!nodes.container) return;
-    
+
     if (nodes.home.classList.contains('hidden')) showHome();
 
     updateCategoryVideo(filterType);
@@ -88,8 +94,8 @@ function filterPortfolio(filterType = 'todos', shouldScroll = true) {
         'terreno': 'Terrenos e Lotes',
         'apartamento': 'Apartamentos Exclusivos'
     };
-    
-    if(nodes.title) nodes.title.innerText = titles[filterType] || titles.todos;
+
+    if (nodes.title) nodes.title.innerText = titles[filterType] || titles.todos;
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.filter === filterType);
@@ -99,7 +105,7 @@ function filterPortfolio(filterType = 'todos', shouldScroll = true) {
     if (shouldScroll) {
         const target = document.getElementById('imoveis');
         if (target) {
-            const offset = 80; 
+            const offset = 80;
             const bodyRect = document.body.getBoundingClientRect().top;
             const elementRect = target.getBoundingClientRect().top;
             const elementPosition = elementRect - bodyRect;
@@ -115,26 +121,61 @@ function filterPortfolio(filterType = 'todos', shouldScroll = true) {
     nodes.container.style.opacity = '0';
     setTimeout(() => {
         nodes.container.innerHTML = '';
-        const filteredKeys = Object.keys(imoveisData).filter(key => 
+        const filteredKeys = Object.keys(imoveisData).filter(key =>
             filterType === 'todos' || imoveisData[key].tipo === filterType
         );
 
         if (filteredKeys.length === 0) {
             nodes.container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-20 italic">Nenhum ativo disponível no momento.</p>`;
         } else {
+            // CÓDIGO CORRIGIDO (SEGURO)
             filteredKeys.forEach(key => {
                 const item = imoveisData[key];
+
+                // 1. Criamos o elemento principal
                 const card = document.createElement('div');
                 card.className = "glass-card group overflow-hidden cursor-pointer fade-in";
-                card.onclick = () => openDetail(key);
-                card.innerHTML = `
-                    <div class="h-80 overflow-hidden"><img src="${item.imagens[0]}" class="w-full h-full object-cover transition duration-1000 group-hover:scale-110"></div>
-                    <div class="p-8">
-                        <h3 class="text-xl font-serif text-white mb-2">${item.titulo}</h3>
-                        <p class="text-[10px] uppercase tracking-widest text-gold mb-6">${item.subtitulo}</p>
-                        <span class="text-gold text-[9px] uppercase tracking-[0.3em] font-bold">Ver Ficha Técnica →</span>
-                    </div>
-                `;
+
+                // Usar addEventListener garante que o clique funcione mesmo em elementos dinâmicos
+                card.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openDetail(key); // O 'key' aqui é o ID como 'mansao-solar'
+                });
+
+                // 2. Criamos a estrutura de imagem com segurança
+                const imgWrapper = document.createElement('div');
+                imgWrapper.className = "h-80 overflow-hidden";
+
+                const img = document.createElement('img');
+                img.src = item.imagens[0]; // Atribuição direta de propriedade é segura
+                img.className = "w-full h-full object-cover transition duration-1000 group-hover:scale-110";
+                imgWrapper.appendChild(img);
+
+                // 3. Criamos o container de texto
+                const infoDiv = document.createElement('div');
+                infoDiv.className = "p-8";
+
+                const title = document.createElement('h3');
+                title.className = "text-xl font-serif text-white mb-2";
+                // USAMOS textContent EM VEZ DE innerHTML
+                title.textContent = item.titulo;
+
+                const sub = document.createElement('p');
+                sub.className = "text-[10px] uppercase tracking-widest text-gold mb-6";
+                sub.textContent = item.subtitulo;
+
+                const linkText = document.createElement('span');
+                linkText.className = "text-gold text-[9px] uppercase tracking-[0.3em] font-bold";
+                linkText.textContent = "Ver Ficha Técnica →";
+
+                // 4. Montamos a árvore (Append)
+                infoDiv.appendChild(title);
+                infoDiv.appendChild(sub);
+                infoDiv.appendChild(linkText);
+
+                card.appendChild(imgWrapper);
+                card.appendChild(infoDiv);
+
                 nodes.container.appendChild(card);
             });
         }
@@ -156,44 +197,66 @@ function startAutoSlide(total) {
 
 function stopAutoSlide() { if (slideInterval) clearInterval(slideInterval); }
 
+
 function openDetail(id) {
     const data = imoveisData[id];
     if (!data) return;
+    // 1. Reset de estado interno
     currentSlide = 0;
+    stopAutoSlide(); // Garante que nenhum timer anterior fique rodando
     const totalImgs = data.imagens.length;
-    nodes.detailContent.innerHTML = `
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            <div class="relative overflow-hidden rounded-sm shadow-2xl bg-gray-100 group">
-                <div id="slider-track" class="flex transition-transform duration-700">
-                    ${data.imagens.map(img => `<img src="${img}" class="w-full h-auto flex-shrink-0 object-cover">`).join('')}
-                </div>
-                ${totalImgs > 1 ? `
-                    <button onclick="moveSlide(-1, ${totalImgs})" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 hover:bg-gold opacity-0 group-hover:opacity-100"><i data-lucide="chevron-left"></i></button>
-                    <button onclick="moveSlide(1, ${totalImgs})" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 hover:bg-gold opacity-0 group-hover:opacity-100"><i data-lucide="chevron-right"></i></button>
-                ` : ''}
+
+    // Limpa e reconstrói de forma segura
+    function openDetail(id) {
+        const data = imoveisData[id];
+        const fragment = document.createDocumentFragment();
+        const container = document.createElement('div');
+        container.className = "grid grid-cols-1 lg:grid-cols-2 gap-16 items-start";
+
+        // Use uma função auxiliar para gerar o conteúdo interno com segurança
+        container.innerHTML = generateDetailTemplate(data);
+
+        fragment.appendChild(container);
+        nodes.detailContent.replaceChildren(fragment); // Mais rápido que innerHTML = ''
+    }
+    const grid = document.createElement('div');
+    grid.className = "grid grid-cols-1 lg:grid-cols-2 gap-16 items-start";
+
+    // Conteúdo (Texto e Imagens)
+    grid.innerHTML = `
+        <div class="relative overflow-hidden rounded-sm shadow-2xl bg-gray-100 group">
+            <div id="slider-track" class="flex transition-transform duration-700">
+                ${data.imagens.map(img => `<img src="${img}" class="w-full h-auto flex-shrink-0 object-cover">`).join('')}
             </div>
-            <div>
-                <span class="text-gold uppercase tracking-[0.5em] text-[11px] font-bold mb-4 block">${data.subtitulo}</span>
-                <h2 class="text-4xl md:text-6xl font-serif mb-8 leading-tight">${data.titulo}</h2>
-                <p class="text-gray-600 text-lg leading-relaxed mb-12 font-light italic">"${data.descricao}"</p>
-                <div class="grid grid-cols-2 gap-8 mb-16">
-                    ${data.detalhes.map(d => `
-                        <div class="border-b border-gray-100 pb-4">
-                            <span class="block text-[9px] uppercase text-gray-400 font-bold mb-1 tracking-widest">${d.label}</span>
-                            <span class="text-xl font-medium">${d.value}</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <a href="https://wa.me/5515998440267" target="_blank" class="w-full bg-black text-white px-16 py-6 text-[11px] uppercase tracking-[0.4em] font-bold hover:bg-gold transition-all text-center block">Solicitar Atendimento Private</a>
+            ${totalImgs > 1 ? `
+                <button onclick="moveSlide(-1, ${totalImgs})" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 hover:bg-gold opacity-0 group-hover:opacity-100"><i data-lucide="chevron-left"></i></button>
+                <button onclick="moveSlide(1, ${totalImgs})" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 hover:bg-gold opacity-0 group-hover:opacity-100"><i data-lucide="chevron-right"></i></button>
+            ` : ''}
+        </div>
+        <div>
+            <span class="text-gold uppercase tracking-[0.5em] text-[11px] font-bold mb-4 block">${data.subtitulo}</span>
+            <h2 class="text-4xl md:text-6xl font-serif mb-8 leading-tight">${data.titulo}</h2>
+            <p class="text-gray-600 text-lg leading-relaxed mb-12 font-light italic">"${data.descricao}"</p>
+            <div class="grid grid-cols-2 gap-8 mb-16">
+                ${data.detalhes.map(d => `
+                    <div class="border-b border-gray-100 pb-4">
+                        <span class="block text-[9px] uppercase text-gray-400 font-bold mb-1 tracking-widest">${d.label}</span>
+                        <span class="text-xl font-medium">${d.value}</span>
+                    </div>
+                `).join('')}
             </div>
+            <a href="https://wa.me/5515998440267" target="_blank" class="w-full bg-black text-white px-16 py-6 text-[11px] uppercase tracking-[0.4em] font-bold hover:bg-gold transition-all text-center block">Solicitar Atendimento Private</a>
         </div>
     `;
+
+    nodes.detailContent.replaceChildren(grid);
     nodes.home.classList.add('hidden');
     nodes.detail.classList.remove('hidden');
     nodes.navbar.classList.add('nav-scrolled');
     window.scrollTo(0, 0);
     initIcons();
     startAutoSlide(totalImgs);
+    refreshUI();
 }
 
 function showHome() {
@@ -216,23 +279,27 @@ window.addEventListener('DOMContentLoaded', () => {
     initIcons();
 });
 
-function filter(cat) {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.category === cat);
-    });
+// Adicione esta proteção no final do seu script.js
+window.addEventListener('DOMContentLoaded', () => {
+    // Verifica se todos os nós críticos existem antes de iniciar
+    const requiredNodes = ['home-page', 'cards-container', 'navbar'];
+    const missing = requiredNodes.filter(id => !document.getElementById(id));
 
-    if (nodes.video) {
-        // --- INÍCIO DA ALTERAÇÃO: Configurações para Cloudflare R2 ---
-        nodes.video.setAttribute('crossorigin', 'anonymous'); // Permite carregar vídeos de domínios externos (CORS)
-        nodes.video.src = categoryVideos[cat];
-        nodes.video.load(); // Força o recarregamento do player para a nova fonte
-        // --- FIM DA ALTERAÇÃO ---
-        
-        nodes.video.play().catch(e => console.log("Autoplay impedido:", e));
+    if (missing.length === 0) {
+        filterPortfolio('todos', false);
+        initIcons();
+    } else {
+        console.error("Erro Crítico: IDs faltando no HTML:", missing);
     }
-    
-    nodes.videoTitle.innerText = cat === 'todos' ? 'Estratégia GARQ' : `Ativos: ${cat}s`;
-    nodes.videoCat.innerText = cat === 'todos' ? 'Portfólio Completo' : `Categoria: ${cat}`;
-    
-    renderGrid(cat);
+});
+
+function refreshUI() {
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
+
+window.addEventListener('load', () => {
+    mapNodes();
+    refreshUI();
+});
