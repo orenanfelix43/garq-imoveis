@@ -1,9 +1,6 @@
-/* DEPOIS (CÓDIGO CORRETO E OTIMIZADO) */
 @import "tailwindcss";
 
 @theme {
-    /* No Tailwind 4, configuramos as fontes assim para que 
-     as classes font-sans e font-serif funcionem nativamente */
     --font-sans: "Montserrat", ui-sans-serif, system-ui;
     --font-serif: "Cinzel", ui-serif, Georgia;
 }
@@ -14,26 +11,12 @@
     --light: #fdfdfd;
 }
 
-/* Reset Global Otimizado */
-body {
-    font-family: var(--font-sans);
-    background-color: var(--dark);
-    color: var(--light);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-}
-
 /* Forçamos títulos a usarem a Cinzel */
-h1,
-h2,
-h3,
-h4,
-h5,
-.font-serif {
+h1, h2, h3, h4, h5, .font-serif {
     font-family: var(--font-serif) !important;
 }
 
-/* ... restante do seu código (Hero, Navbar, etc) permanece igual ... */
+/* Resto do seu código abaixo... */
 
 :root {
     --gold: #c5a059;
