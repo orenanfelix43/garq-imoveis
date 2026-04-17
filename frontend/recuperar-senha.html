@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Senha | GARQ Invest</title>
+
+    <link rel="icon" type="image/jpeg" href="assets/favicon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body class="bg-[#0a0a0a]">
+
+    <div class="login-container px-6">
+        <div class="login-card fade-in">
+            <div class="text-center mb-10">
+                <i data-lucide="key-round" class="text-gold w-10 h-10 mx-auto mb-4"></i>
+                <h2 class="text-2xl font-serif text-white">Recuperar Senha</h2>
+                <p class="text-[10px] uppercase tracking-widest text-gray-500 mt-2">Informe seu e-mail para receber o
+                    link de redefinição.</p>
+            </div>
+
+            <form id="recoveryForm" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">E-mail de
+                        Cadastro</label>
+                    <input type="email" id="emailInput" class="login-input" placeholder="seu@email.com" required>
+                    <p id="errorMessage"
+                        class="hidden text-[9px] uppercase tracking-tighter text-red-500 mt-2 font-bold italic">Nenhuma
+                        conta encontrada com este e-mail.</p>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-gold text-black py-5 font-bold uppercase text-[10px] tracking-[0.3em] hover:bg-white transition-all shadow-lg">
+                    Enviar Link de Recuperação
+                </button>
+                
+            </form>
+
+            <div id="successMessage" class="hidden text-center py-4">
+                <i data-lucide="check-circle" class="text-green-500 w-12 h-12 mx-auto mb-4"></i>
+                <p class="text-white text-sm font-light leading-relaxed">Se este e-mail estiver em nossa base, você
+                    receberá um link de alteração em instantes.</p>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-white/5 text-center">
+                <a href="login.html"
+                    class="text-[10px] uppercase tracking-widest text-gray-500 hover:text-gold transition">
+                    <i data-lucide="arrow-left" class="w-3 h-3 inline mr-1"></i> Voltar ao Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/recovery.js"></script>
+</body>
+
+</html>

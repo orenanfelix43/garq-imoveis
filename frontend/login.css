@@ -1,0 +1,109 @@
+/* --- Estilos da Página de Login --- */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to bottom, rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.95)),
+        url('assets/fundoHeroSection.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    padding: 3rem;
+    width: 100%;
+    max-width: 450px;
+}
+
+.login-input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 0.875rem;
+    font-weight: 300;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(197, 160, 89, 0.2) !important;
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.login-input:focus {
+    border-color: var(--gold) !important;
+    outline: none;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Estilo para o link de cadastro */
+.register-link {
+    color: var(--gold);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.register-link:hover {
+    color: white;
+    text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
+}
+
+/* Estilo para links auxiliares (Esqueci senha) */
+.aux-link {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.3s ease;
+    text-decoration: none;
+}
+
+.aux-link:hover {
+    color: var(--gold);
+}
+
+/* Definição de cores e fontes baseadas nas classes que você usou */
+:root {
+    --gold: #c5a059;
+    /* Exemplo de tom dourado */
+}
+
+.text-gold {
+    color: var(--gold);
+}
+
+.bg-gold {
+    background-color: var(--gold);
+}
+
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 2.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    max-width: 400px;
+    width: 100%;
+}
+
+.login-input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    color: white;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: var(--gold);
+}

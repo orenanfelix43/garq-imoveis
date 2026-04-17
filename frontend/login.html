@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | GARQ Invest</title>
+
+    <link rel="icon" type="image/jpeg" href="assets/favicon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body class="bg-[#0a0a0a]">
+
+    <div class="login-container px-6">
+        <div class="login-card fade-in">
+            <div class="text-center mb-10">
+
+                <span class="text-gold uppercase tracking-[0.4em] text-[10px] font-bold block mb-2">Plataforma do
+                    Investidor</span>
+                <h2 class="text-2xl font-serif text-white">GARQ Invest</h2>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label
+                        class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">E-mail</label>
+                    <input type="email" id="loginEmail" class="login-input" placeholder="seunome@email.com.br" required>
+                </div>
+
+                <div>
+                    <label
+                        class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">Senha</label>
+                    <input type="password" id="loginPass" class="login-input" placeholder="••••••••" required>
+
+                    <div class="flex justify-end mt-2">
+                        <a href="recuperar-senha.html" class="aux-link">Esqueci minha senha</a>
+                    </div>
+                </div>
+
+                <p id="loginErrorMessage"
+                    class="hidden text-[9px] uppercase tracking-tighter text-red-500 mt-2 font-bold italic text-center">
+                </p>
+
+                <button type="submit"
+                    class="w-full bg-gold text-black py-5 font-bold uppercase text-[10px] tracking-[0.3em] hover:bg-white transition-all shadow-lg mt-4">
+                    Entrar no Sistema
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <p class="text-[11px] uppercase tracking-widest text-gray-400 font-light">
+                    Não possui uma conta?
+                    <a href="cadastro.html" class="register-link ml-1">Cadastre-se</a>
+                </p>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-white/5 text-center">
+                <a href="index.html"
+                    class="text-[10px] uppercase tracking-widest text-gray-500 hover:text-gold transition">
+                    <i data-lucide="arrow-left" class="w-3 h-3 inline mr-1"></i> Voltar ao início
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializa ícones Lucide
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) window.lucide.createIcons();
+        });
+    </script>
+    <script type="module" src="src/login-handler.js"></script>
+</body>
+
+</html>

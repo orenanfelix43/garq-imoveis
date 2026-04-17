@@ -7,29 +7,8 @@ const categoryVideos = {
     'apartamento': 'https://vjs.zencdn.net/v/oceans.mp4'
 };
 
-const imoveisData = {
-    'mansao-solar': {
-        tipo: 'casa',
-        titulo: 'Mansão Solar | Fazenda Alvorada',
-        subtitulo: 'Residência de Elite • Interior de SP',
-        imagens: ['mansaosolar/1.webp'],
-        descricao: 'Uma obra-prima arquitetônica que equilibra materiais naturais e design contemporâneo.',
-        detalhes: [
-            { label: 'Área Terreno', value: '2.500 m²' },
-            { label: 'Suítes', value: '06 Master' }
-        ]
-    },
-    'lote-vista-lago': {
-        tipo: 'terreno',
-        titulo: 'Lote Vista Lago',
-        subtitulo: 'Ativo Estratégico • Terreno Premium',
-        imagens: ['https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80'],
-        descricao: 'Oportunidade rara para construção personalizada com vista perene para o lago.',
-        detalhes: [
-            { label: 'Área Total', value: '3.100 m²' },
-            { label: 'Frente', value: '45 metros' }
-        ]
-    }
+window.imoveisData = {
+    
 };
 
 // ─── Estado Global ────────────────────────────────────────────────────────────
@@ -40,16 +19,16 @@ let slideInterval;
 // ─── Mapeamento de Nós DOM ────────────────────────────────────────────────────
 function mapNodes() {
     nodes = {
-        home:         document.getElementById('home-page'),
-        detail:       document.getElementById('detail-page'),
-        detailContent:document.getElementById('detail-content'),
-        container:    document.getElementById('cards-container'),
-        navbar:       document.getElementById('navbar'),
-        title:        document.getElementById('portfolio-title'),
+        home: document.getElementById('home-page'),
+        detail: document.getElementById('detail-page'),
+        detailContent: document.getElementById('detail-content'),
+        container: document.getElementById('cards-container'),
+        navbar: document.getElementById('navbar'),
+        title: document.getElementById('portfolio-title'),
         videoWrapper: document.getElementById('category-video-wrapper'),
         videoElement: document.getElementById('main-category-video'),
-        videoLabel:   document.getElementById('video-label'),
-        videoTitle:   document.getElementById('video-title')
+        videoLabel: document.getElementById('video-label'),
+        videoTitle: document.getElementById('video-title')
     };
 }
 
@@ -62,9 +41,9 @@ function initIcons() {
 function updateCategoryVideo(filterType) {
     if (!nodes.videoWrapper || !nodes.videoElement) return;
 
-    const videoSrc    = categoryVideos[filterType] || categoryVideos['todos'];
+    const videoSrc = categoryVideos[filterType] || categoryVideos['todos'];
     const displayLabel = `Experiência GARQ • ${filterType === 'todos' ? 'Institucional' : filterType}`;
-    const mainTitle    = filterType === 'todos' ? 'Estratégia e Solidez' : `${filterType}s Exclusivos`;
+    const mainTitle = filterType === 'todos' ? 'Estratégia e Solidez' : `${filterType}s Exclusivos`;
 
     nodes.videoWrapper.classList.remove('h-0', 'mb-0', 'opacity-0');
     nodes.videoWrapper.classList.add('h-[280px]', 'md:h-[450px]', 'opacity-100', 'mb-16');
@@ -78,19 +57,118 @@ function updateCategoryVideo(filterType) {
     if (nodes.videoTitle) nodes.videoTitle.textContent = mainTitle;
 }
 
-// ─── Filtro de Portfólio ──────────────────────────────────────────────────────
+/* =============================================================================
+  RENDERIZAÇÃO DE INTERFACE (UI RENDERERS)
+  Responsável por transformar dados em elementos HTML.
+  =============================================================================
+*/
+
+/**
+ * Renderiza os cards de imóveis no container principal.
+ * @param {string} filterType - Categoria a ser exibida ('todos', 'casa', etc).
+ */
+window.renderImoveis = function (filterType = 'todos') {
+    if (!nodes.container) return;
+
+    // Inicia efeito de transição
+    nodes.container.style.opacity = '0';
+
+    setTimeout(() => {
+        nodes.container.innerHTML = '';
+
+        const data = window.imoveisData || {};
+        const filteredKeys = Object.keys(data).filter(key =>
+            filterType === 'todos' || data[key].tipo === filterType
+        );
+
+        // Tratamento de Estado Vazio
+        if (filteredKeys.length === 0) {
+            renderEmptyState();
+        } else {
+            // Construção dos Cards
+            filteredKeys.forEach(key => {
+                const card = createPropertyCard(key, data[key]);
+                nodes.container.appendChild(card);
+            });
+        }
+
+        nodes.container.style.opacity = '1';
+        if (window.lucide) window.lucide.createIcons();
+    }, 300);
+};
+
+/**
+ * Cria o elemento HTML de um card individual (Componentização)
+ */
+function createPropertyCard(key, item) {
+    const card = document.createElement('div');
+    card.className = "glass-card group overflow-hidden cursor-pointer fade-in";
+    card.addEventListener('click', () => openDetail(key));
+
+    card.innerHTML = `
+        <div class="h-80 overflow-hidden">
+            <img src="${item.imagens[0]}" alt="${item.titulo}" loading="lazy" 
+                 class="w-full h-full object-cover transition duration-1000 group-hover:scale-110">
+        </div>
+        <div class="p-8">
+            <h3 class="text-xl font-serif text-white mb-2">${item.titulo}</h3>
+            <p class="text-[10px] uppercase tracking-widest text-gold mb-6">${item.subtitulo}</p>
+            <span class="text-gold text-[9px] uppercase tracking-[0.3em] font-bold">Ver Ficha Técnica →</span>
+        </div>
+    `;
+    return card;
+}
+
+/**
+ * Renderiza mensagem de feedback quando não há resultados
+ */
+function renderEmptyState() {
+    const emptyMessage = document.createElement('div');
+    emptyMessage.className = "col-span-full text-center py-20 fade-in";
+    emptyMessage.innerHTML = `
+        <p class="text-gray-500 font-serif italic text-xl mb-2">Sem imóveis disponíveis</p>
+        <p class="text-gray-500 text-[10px] uppercase tracking-[0.3em] text-gold/50">Tente selecionar outra categoria ou volte mais tarde</p>
+    `;
+    nodes.container.appendChild(emptyMessage);
+}
+
+
+/* =============================================================================
+  LÓGICA DE NAVEGAÇÃO E FILTROS (HANDLERS)
+  Responsável por gerenciar eventos do usuário e estados da página.
+  =============================================================================
+*/
+
+/**
+ * Gerencia a troca de categorias e scroll da página.
+ */
 function filterPortfolio(filterType = 'todos', shouldScroll = true) {
     if (!nodes.container) return;
 
-    // Se estiver na página de detalhe, volta para home primeiro
+    // Reset de estado: Se estiver em detalhes, volta para a home
     if (nodes.home && nodes.home.classList.contains('hidden')) showHome();
 
+    // Atualização Visual (Vídeo e Títulos)
     updateCategoryVideo(filterType);
+    updateFilterUI(filterType);
 
+    // Scroll Suave
+    if (shouldScroll) {
+        scrollToContainer('imoveis');
+    }
+
+    // Executa a renderização dos dados
+    window.renderImoveis(filterType);
+}
+
+/**
+ * Atualiza classes de botões e textos de título
+ */
+function updateFilterUI(filterType) {
     const titles = {
-        'todos':       'Inventário de Ativos',
-        'casa':        'Casas de Alto Padrão',
-        'terreno':     'Terrenos e Lotes',
+        'todos': 'Inventário de Ativos',
+        'casa': 'Casas de Alto Padrão',
+        'terreno': 'Terrenos e Lotes',
         'apartamento': 'Apartamentos Exclusivos'
     };
 
@@ -99,74 +177,18 @@ function filterPortfolio(filterType = 'todos', shouldScroll = true) {
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.filter === filterType);
     });
+}
 
-    if (shouldScroll) {
-        const target = document.getElementById('imoveis');
-        if (target) {
-            const offset = 80;
-            const offsetPosition = target.getBoundingClientRect().top + window.scrollY - offset;
-            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-        }
+/**
+ * Helper para scroll suave com offset
+ */
+function scrollToContainer(elementId) {
+    const target = document.getElementById(elementId);
+    if (target) {
+        const offset = 80;
+        const offsetPosition = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     }
-
-    nodes.container.style.opacity = '0';
-
-    setTimeout(() => {
-        nodes.container.innerHTML = '';
-
-        const filteredKeys = Object.keys(imoveisData).filter(key =>
-            filterType === 'todos' || imoveisData[key].tipo === filterType
-        );
-
-        if (filteredKeys.length === 0) {
-            const empty = document.createElement('p');
-            empty.className = "col-span-full text-center text-gray-500 py-20 italic";
-            empty.textContent = "Nenhum ativo disponível no momento.";
-            nodes.container.appendChild(empty);
-        } else {
-            filteredKeys.forEach(key => {
-                const item = imoveisData[key];
-
-                const card = document.createElement('div');
-                card.className = "glass-card group overflow-hidden cursor-pointer fade-in";
-                card.addEventListener('click', () => openDetail(key));
-
-                const imgWrapper = document.createElement('div');
-                imgWrapper.className = "h-80 overflow-hidden";
-
-                const img = document.createElement('img');
-                img.src = item.imagens[0];
-                img.alt = item.titulo;
-                img.loading = "lazy";
-                img.className = "w-full h-full object-cover transition duration-1000 group-hover:scale-110";
-                imgWrapper.appendChild(img);
-
-                const infoDiv = document.createElement('div');
-                infoDiv.className = "p-8";
-
-                const h3 = document.createElement('h3');
-                h3.className = "text-xl font-serif text-white mb-2";
-                h3.textContent = item.titulo;
-
-                const sub = document.createElement('p');
-                sub.className = "text-[10px] uppercase tracking-widest text-gold mb-6";
-                sub.textContent = item.subtitulo;
-
-                const link = document.createElement('span');
-                link.className = "text-gold text-[9px] uppercase tracking-[0.3em] font-bold";
-                link.textContent = "Ver Ficha Técnica →";
-
-                infoDiv.appendChild(h3);
-                infoDiv.appendChild(sub);
-                infoDiv.appendChild(link);
-                card.appendChild(imgWrapper);
-                card.appendChild(infoDiv);
-                nodes.container.appendChild(card);
-            });
-        }
-
-        nodes.container.style.opacity = '1';
-    }, 300);
 }
 
 // ─── Slider ───────────────────────────────────────────────────────────────────
@@ -315,7 +337,7 @@ window.addEventListener('DOMContentLoaded', () => {
     mapNodes();
 
     const required = ['home-page', 'cards-container', 'navbar'];
-    const missing  = required.filter(id => !document.getElementById(id));
+    const missing = required.filter(id => !document.getElementById(id));
 
     if (missing.length > 0) {
         console.error('GARQ — IDs faltando no HTML:', missing);
