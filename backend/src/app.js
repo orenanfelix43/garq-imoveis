@@ -6,17 +6,29 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const imovelRoutes = require('./routes/imoveis');
 
-console.log(process.env.EMAIL_USER);
-console.log(process.env.EMAIL_PASS);
-
+const allowedOrigins = [
+  'https://www.garqimoveis.com.br',
+  'https://garqimoveis.com.br',
+  'https://garq-imoveis-frontend.vercel.app',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500'
+];
 
 const app = express();
 connectDB();
 
 app.use(helmet());
 app.use(cors({
-  origin: "https://garq-imoveis.vercel.app/",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: function (origin, callback) {
+    // Permite pedidos sem origem (como apps móveis ou curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política CORS para este site não permite acesso a partir da origem especificada.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
