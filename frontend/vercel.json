@@ -10,5 +10,11 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://garq-imoveis-backend.vercel.app/:path*"
+    }
   ]
 }
