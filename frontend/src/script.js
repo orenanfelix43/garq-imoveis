@@ -1,5 +1,10 @@
 const baseUrl = "https://pub-c3e6ea3b19da44d7b869d5d7b4eaf09b.r2.dev";
 
+// --- NOVA CONFIGURAÇÃO DE API ---
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000/api' 
+    : 'https://garq-imoveis-backend.vercel.app/api';
+
 const categoryVideos = {
     'todos': `${baseUrl}/Todos.mp4`,
     'casa': `${baseUrl}/AereoCasa.MP4`,
@@ -7,9 +12,33 @@ const categoryVideos = {
     'apartamento': 'https://vjs.zencdn.net/v/oceans.mp4'
 };
 
-window.imoveisData = {
-    
-};
+// Inicia vazio, será preenchido pela API
+window.imoveisData = {};
+
+// --- NOVA FUNÇÃO PARA BUSCAR DADOS DO MONGODB ---
+async function fetchImoveis() {
+    try {
+        const response = await fetch(`${API_URL}/imoveis`);
+        const result = await response.json();
+        
+        if (result.success) {
+            // Converte o Array do MongoDB em Objeto para manter compatibilidade com seu script atual
+            const dataObject = {};
+            result.data.forEach(imovel => {
+                // Usa o _id do MongoDB ou um slug como chave
+                dataObject[imovel._id || imovel.titulo] = imovel;
+            });
+            
+            window.imoveisData = dataObject;
+            
+            // Agora que os dados chegaram, renderiza a tela inicial
+            filterPortfolio('todos', false);
+        }
+    } catch (error) {
+        console.error("GARQ — Erro ao carregar imóveis da API:", error);
+        renderEmptyState(); // Mostra mensagem de erro/vazio se falhar
+    }
+}
 
 // ─── Estado Global ────────────────────────────────────────────────────────────
 let nodes = {};
@@ -344,6 +373,6 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    filterPortfolio('todos', false);
+    fetchImoveis();
     initIcons();
 });
