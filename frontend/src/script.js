@@ -15,30 +15,7 @@ const categoryVideos = {
 // Inicia vazio, será preenchido pela API
 window.imoveisData = {};
 
-// --- NOVA FUNÇÃO PARA BUSCAR DADOS DO MONGODB ---
-async function fetchImoveis() {
-    try {
-        const response = await fetch(`${API_URL}/imoveis`);
-        const result = await response.json();
-        
-        if (result.success) {
-            // Converte o Array do MongoDB em Objeto para manter compatibilidade com seu script atual
-            const dataObject = {};
-            result.data.forEach(imovel => {
-                // Usa o _id do MongoDB ou um slug como chave
-                dataObject[imovel._id || imovel.titulo] = imovel;
-            });
-            
-            window.imoveisData = dataObject;
-            
-            // Agora que os dados chegaram, renderiza a tela inicial
-            filterPortfolio('todos', false);
-        }
-    } catch (error) {
-        console.error("GARQ — Erro ao carregar imóveis da API:", error);
-        renderEmptyState(); // Mostra mensagem de erro/vazio se falhar
-    }
-}
+// Dados preenchidos pelo home-api.js
 
 // ─── Estado Global ────────────────────────────────────────────────────────────
 let nodes = {};
@@ -373,6 +350,5 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    fetchImoveis();
     initIcons();
 });

@@ -7,11 +7,13 @@ const authRoutes = require('./routes/auth');
 const imovelRoutes = require('./routes/imoveis');
 
 const allowedOrigins = [
+  'https://garq-imoveis.vercel.app',
   'https://www.garqimoveis.com.br',
   'https://garqimoveis.com.br',
   'https://garq-imoveis-frontend.vercel.app',
   'http://localhost:5500',
-  'http://127.0.0.1:5500'
+  'http://127.0.0.1:5500',
+  'http://localhost:3000'
 ];
 
 const app = express();
