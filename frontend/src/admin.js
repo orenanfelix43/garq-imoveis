@@ -7,7 +7,7 @@ let tempPhotos = [];
 let tempAttrs = [];
 let properties = []; 
 
-const API_URL = 'http://localhost:5000/api/imoveis';
+const API_URL = `${API_URL}/api/imoveis`; // Centraliza o endpoint para fácil manutenção
 
 // --- 1. Inicialização ---
 async function init() {
