@@ -2,8 +2,13 @@
 
 export class AuthService {
     constructor() {
-        // Altere para a URL do seu servidor (ex: http://localhost:5000/api/auth)
-        this.apiUrl = 'http://localhost:5000/api/auth';
+       // Define a base da URL dependendo de onde o site está rodando
+        const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5000/api' 
+            : 'https://garq-imoveis-backend.vercel.app/api';
+
+        // Define o endpoint específico para autenticação
+        this.apiUrl = `${BASE_URL}/auth`;
     }
 
     async register(userData) {

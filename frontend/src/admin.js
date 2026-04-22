@@ -142,7 +142,7 @@ async function deleteItem(id) {
     if (!confirm('Excluir este item permanentemente?')) return;
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch(`${API_URL}/${id}`, {
+        const response = await fetch(`${API_URL}/imoveis/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -178,7 +178,7 @@ document.getElementById('property-form').onsubmit = async function (e) {
     };
 
     const method = id ? 'PUT' : 'POST';
-    const url = id ? `${API_URL}/${id}` : API_URL;
+    const url = id ? `${API_URL}/imoveis/${id}` : `${API_URL}/imoveis`;
 
     try {
         const response = await fetch(url, {
