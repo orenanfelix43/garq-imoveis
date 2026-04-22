@@ -1,7 +1,7 @@
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000/api' 
     : 'https://garq-imoveis-backend.vercel.app/api';
-    
+
 document.getElementById('resetForm').onsubmit = async function(e) {
     e.preventDefault();
 
@@ -36,7 +36,7 @@ document.getElementById('resetForm').onsubmit = async function(e) {
 
     try {
         // 3. Enviar o POST para o Backend
-        const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+        const response = await fetch(`${API_URL}/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, password: newPassword })

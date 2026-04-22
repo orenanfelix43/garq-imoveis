@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 3. Chamada à API de Autenticação
-            const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+            const response = await fetch(`${API_URL}/auth/forgot-password`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json' 
