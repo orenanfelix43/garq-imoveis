@@ -7,7 +7,9 @@ let tempPhotos = [];
 let tempAttrs = [];
 let properties = []; 
 
-const API_URL = `${API_URL}/api/imoveis`; // Centraliza o endpoint para fácil manutenção
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api' 
+    : 'https://garq-imoveis-backend.vercel.app/api';
 
 // --- 1. Inicialização ---
 async function init() {
@@ -54,7 +56,7 @@ async function fetchProperties() {
     const propertyList = document.getElementById('property-list');
     const token = localStorage.getItem('token');
     try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_URL}/imoveis`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();

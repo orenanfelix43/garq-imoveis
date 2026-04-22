@@ -3,6 +3,10 @@
  * Lógica profissional para envio de link de redefinição
  */
 
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000/api' 
+    : 'https://garq-imoveis-backend.vercel.app/api';
+
 document.addEventListener('DOMContentLoaded', () => {
     const recoveryForm = document.getElementById('recoveryForm');
     const emailInput = document.getElementById('emailInput');
