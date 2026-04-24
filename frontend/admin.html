@@ -16,6 +16,8 @@
 
 <body class="min-h-screen bg-[#0a0a0a] text-[#fdfdfd] flex flex-col md:flex-row">
 
+    <div id="toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+    
     <aside
         class="w-full md:w-72 md:h-screen md:sticky md:top-0 glass-panel border-b md:border-b-0 md:border-r border-white/5 flex flex-col z-50">
         <div class="p-8 border-b border-white/5 flex justify-center items-center">
@@ -29,9 +31,9 @@
                     <i data-lucide="user" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h4 id="user-name-display" class="text-sm font-bold uppercase tracking-tight">João Silva</h4>
+                    <h4 id="user-name-display" class="text-sm font-bold uppercase tracking-tight">Seu Nome</h4>
                     <p id="user-role-display" class="text-[10px] text-gold uppercase tracking-[0.2em] font-medium">
-                        Administrador</p>
+                        Seu Cargo</p>
                 </div>
             </div>
         </div>
@@ -215,7 +217,8 @@
         </div>
     </div>
 
-    <script src="src/admin.js"></script>
+
+    <script type="module" src="src/admin.js"></script>
 </body>
 
 </html>

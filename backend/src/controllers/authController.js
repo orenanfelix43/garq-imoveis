@@ -9,7 +9,6 @@ exports.register = async (req, res) => {
     try {
         const { name, email, phone, password } = req.body;
 
-        // 1. Verificação de existência (usando .exists para performance)
         const userExists = await User.exists({ email });
         if (userExists) {
             return res.status(409).json({
@@ -18,17 +17,8 @@ exports.register = async (req, res) => {
             });
         }
 
-        // 2. Criação direta
-        // REMOVIDO: bcrypt.hash manual daqui. 
-        // O User.js (Model) cuidará de criptografar ao dar o .create()
-        const user = await User.create({
-            name,
-            email,
-            phone,
-            password
-        });
+        const user = await User.create({ name, email, phone, password });
 
-        // 3. Geração de Token
         const token = jwt.sign(
             { id: user._id },
             process.env.JWT_SECRET,
@@ -38,7 +28,7 @@ exports.register = async (req, res) => {
         return res.status(201).json({
             success: true,
             token,
-            user: { id: user._id, name: user.name, email: user.email }
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
         });
 
     } catch (error) {
@@ -52,18 +42,16 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // 1. Busca incluindo explicitamente o password (necessário se 'select: false' no model)
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
-            return res.status(401).json({ error: 'Credenciais inválidas' });
+            return res.status(401).json({ success: false, error: 'Credenciais inválidas' });
         }
 
-        // 2. Comparação do texto limpo (visto no req.body) com o hash (do banco)
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json({ error: 'Credenciais inválidas' });
+            return res.status(401).json({ success: false, error: 'Credenciais inválidas' });
         }
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -74,13 +62,14 @@ exports.login = async (req, res) => {
             user: {
                 id: user._id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                role: user.role
             }
         });
 
     } catch (error) {
         console.error('Login Error:', error);
-        return res.status(500).json({ error: 'Erro no servidor' });
+        return res.status(500).json({ success: false, error: 'Erro no servidor' });
     }
 };
 
@@ -96,13 +85,9 @@ exports.forgotPassword = async (req, res) => {
 
         const token = crypto.randomBytes(20).toString('hex');
         user.resetPasswordToken = token;
-        user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
-        
-        // Salvando o token no banco. 
-        // Se o pre-save hook estiver correto (item 1), ele não re-criptografará a senha aqui.
+        user.resetPasswordExpires = Date.now() + 604800000;
         await user.save();
 
-        // Configuração do Transporter (Mova para fora ou defina antes do uso)
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -111,7 +96,8 @@ exports.forgotPassword = async (req, res) => {
             }
         });
 
-        const resetUrl = `http://localhost:5500/redefinir-senha.html?token=${token}`;
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5500';
+        const resetUrl = `${baseUrl}/redefinir-senha.html?token=${token}`;
 
         await transporter.sendMail({
             to: user.email,
@@ -143,7 +129,6 @@ exports.resetPassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Link inválido ou expirado.' });
         }
 
-        // Como o Model tem pre-save hook, basta atribuir o texto limpo
         user.password = password;
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
@@ -152,6 +137,7 @@ exports.resetPassword = async (req, res) => {
 
         return res.status(200).json({ success: true, message: 'Senha atualizada!' });
     } catch (error) {
+        console.error('Reset Password Error:', error);
         return res.status(500).json({ success: false, message: 'Erro interno ao resetar senha.' });
     }
 };

@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
-// 1. Adicione o 'login' aqui na importação do controller
+const rateLimit = require('express-rate-limit');
+
 const { register, login, forgotPassword, resetPassword } = require('../controllers/authController');
 
-// Rota de Cadastro (já existente)
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10,                  // Até 10 tentativas por IP
+    message: "Muitas tentativas de login, por favor tente novamente mais tarde."
+});
+
 router.post('/register', register);
-
-// 2. NOVA LINHA: Rota de Login
-router.post('/login', login);
-
-// 3. NOVA LINHA: Rota de Esqueci Minha Senha
-router.post('/forgot-password', forgotPassword);
-
-router.post('/reset-password', resetPassword);
+router.post('/login', loginLimiter, login);
+router.post('/forgot-password',loginLimiter, forgotPassword);
+router.post('/reset-password', loginLimiter, resetPassword);
 
 module.exports = router;

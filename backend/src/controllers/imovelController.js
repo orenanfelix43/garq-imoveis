@@ -5,11 +5,9 @@ const Imovel = require('../models/Imovel');
 // ==========================================
 exports.criarImovel = async (req, res) => {
     try {
-        const userId = req.user ? req.user.id : "69d3bdefb7e82777bf8ddf34"; 
-        
         const novoImovel = await Imovel.create({
             ...req.body,
-            user: userId
+            user: req.user.id
         });
 
         res.status(201).json({ success: true, data: novoImovel });
@@ -82,14 +80,9 @@ exports.atualizarImovel = async (req, res) => {
 exports.deletarImovel = async (req, res) => {
     try {
         const imovel = await Imovel.findByIdAndDelete(req.params.id);
-
         if (!imovel) {
             return res.status(404).json({ success: false, error: "Imóvel não encontrado." });
         }
-
-        // Usar deleteOne() dispara os "middlewares" do Mongoose caso você os tenha configurado no Model
-        await imovel.deleteOne();
-
         res.status(200).json({ success: true, data: {} });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });

@@ -14,20 +14,16 @@ const protect = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // DEBUG: Veja no terminal do VS Code o que está acontecendo
-        console.log("---------------- DEBUG AUTH ----------------");
-        console.log("ID que veio no Token:", decoded.id);
 
-        // Tenta buscar o usuário
         req.user = await User.findById(decoded.id);
-        
+
         if (!req.user) {
-            console.log("RESULTADO: ID decodificado, mas não achou no banco AdminGarq");
             return res.status(401).json({ success: false, error: "Usuário não encontrado" });
         }
 
-        console.log("RESULTADO: Usuário encontrado!", req.user.name);
+        const isDev = process.env.NODE_ENV !== 'production';
+        if (isDev) console.log(`[AUTH] User: ${req.user.name} (${req.user._id})`);
+
         next();
     } catch (err) {
         return res.status(401).json({ success: false, error: "Token inválido" });

@@ -1,9 +1,6 @@
 // src/home-api.js
 import { AuthService } from './modules/authService.js';
-
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000/api' 
-    : 'https://garq-imoveis-backend.vercel.app/api';
+import { API_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
 

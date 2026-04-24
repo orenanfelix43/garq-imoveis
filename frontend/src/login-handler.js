@@ -1,6 +1,5 @@
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000/api' 
-    : 'https://garq-imoveis-backend.vercel.app/api';
+// frontend/src/login-handler.js
+import { API_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) window.lucide.createIcons();
@@ -11,9 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPass').value;
+
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Autenticando...';
+            }
 
             try {
                 const response = await fetch(`${API_URL}/auth/login`, {
@@ -25,12 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    // Armazenamento centralizado de dados
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('userName', result.user.name);
                     localStorage.setItem('userRole', result.user.role || 'Administrador');
-                    
-                    // Redirecionamento após o sucesso
+
                     window.location.href = 'admin.html';
                 } else {
                     throw new Error(result.error || 'Credenciais inválidas');
@@ -39,6 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (errorMessage) {
                     errorMessage.textContent = error.message;
                     errorMessage.classList.remove('hidden');
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Entrar';
                 }
             }
         });

@@ -1,11 +1,4 @@
-/**
- * GARQ Invest - Recuperação de Senha
- * Lógica profissional para envio de link de redefinição
- */
-
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000/api' 
-    : 'https://garq-imoveis-backend.vercel.app/api';
+import { API_URL } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const recoveryForm = document.getElementById('recoveryForm');
