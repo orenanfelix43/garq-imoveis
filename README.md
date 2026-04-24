@@ -102,7 +102,7 @@ projeto-garq/
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/projeto-garq.git
+git clone https://github.com/orenanfelix43/garq-imoveis.git
 cd projeto-garq
 ```
 
@@ -342,16 +342,6 @@ Certifique-se de configurar todas as variáveis de ambiente na dashboard da Verc
 
 ---
 
-## 🤝 Contribuição
-
-1. Fork o repositório
-2. Crie uma branch: `git checkout -b feature/minha-feature`
-3. Commit: `git commit -m 'feat: adiciona X'`
-4. Push: `git push origin feature/minha-feature`
-5. Abra um Pull Request
-
----
-
 ## 📄 Licença
 
-Proprietário — GARQ Invest © 2025. Todos os direitos reservados.
+Proprietário — GARQ Imóveis © 2026. Todos os direitos reservados.
