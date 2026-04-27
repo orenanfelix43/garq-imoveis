@@ -103,7 +103,7 @@ projeto-garq/
 
 ```bash
 git clone https://github.com/orenanfelix43/garq-imoveis.git
-cd projeto-garq
+cd garq-imoveis
 ```
 
 ### 2. Configuração do Backend

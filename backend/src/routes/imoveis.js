@@ -1,22 +1,23 @@
 const express = require('express');
-const router = express.Router();
-const { criarImovel, getImoveis, atualizarImovel, deletarImovel } = require('../controllers/imovelController');
-const { protect } = require('../middleware/auth'); // Importe novamente
+const router  = express.Router();
 
-router.get('/', getImoveis);
-router.put('/:id', protect, atualizarImovel);
-router.delete('/:id', protect, deletarImovel);
+const {
+    criarImovel,
+    getImoveis,
+    getImovel,
+    atualizarImovel,
+    deletarImovel,
+} = require('../controllers/imovelController');
 
+const { protect, authorize } = require('../middleware/auth');
 
-// Reative o 'protect' aqui
-router.post('/', protect, (req, res, next) => {
-    if (req.user) {
-        req.body.user = req.user.id;
-        next();
-    } else {
-        res.status(401).json({ success: false, error: "Usuário não autenticado no banco correto" });
-    }
-}, criarImovel);
+// ─── Rotas públicas ───────────────────────────────────────────────────────────
+router.get('/',    getImoveis);   
+router.get('/:id', getImovel);    
 
+router.post('/',    protect,criarImovel);
+router.put('/:id',  protect,atualizarImovel);
+
+router.delete('/:id', protect, authorize('admin'), deletarImovel);
 
 module.exports = router;

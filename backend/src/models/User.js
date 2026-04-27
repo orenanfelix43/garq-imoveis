@@ -1,55 +1,62 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt   = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
     name: {
-        type: String,
-        required: [true, 'Por favor, adicione um nome']
+        type:     String,
+        required: [true, 'Por favor, adicione um nome'],
+        trim:     true,
+        maxlength: [100, 'Nome não pode exceder 100 caracteres'],
     },
     email: {
-        type: String,
+        type:     String,
         required: [true, 'Por favor, adicione um email'],
-        unique: true,
-        match: [/^\S+@\S+\.\S+$/, 'Por favor, adicione um email válido']
+        unique:   true,
+        lowercase: true,
+        trim:     true,
+        match:    [/^\S+@\S+\.\S+$/, 'Por favor, adicione um email válido'],
     },
     phone: {
-        type: String,
-        required: [true, 'Por favor, adicione um celular']
+        type:     String,
+        required: [true, 'Por favor, adicione um celular'],
+        trim:     true,
     },
     password: {
-        type: String,
-        required: [true, 'Por favor, adicione uma senha'],
+        type:      String,
+        required:  [true, 'Por favor, adicione uma senha'],
         minlength: 6,
-        select: false 
+        select:    false,
     },
     role: {
-        type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
+        type:    String,
+        enum:    ['user', 'admin'],
+        default: 'user',
     },
     createdAt: {
-        type: Date,
-        default: Date.now
+        type:    Date,
+        default: Date.now,
     },
-    resetPasswordToken: String,
-    resetPasswordExpires: Date
+
+    // ─── Campos de recuperação de senha ───────────────────────────────────────
+    resetPasswordToken: {
+        type:   String,
+        index:  { sparse: true },
+    },
+    resetPasswordExpires: {
+        type: Date,
+    },
 });
 
-// Criptografia automática de senha
-UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        console.error("Erro ao criptografar senha:", error);
-        next(error);
-    }
+// ─── Pre-save: hash de senha ──────────────────────────────────────────────────
+UserSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
 });
 
-UserSchema.methods.matchPassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+// ─── Método de instância: comparação de senha ─────────────────────────────────
+UserSchema.methods.matchPassword = async function (enteredPassword) {
+    return bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = mongoose.model('User', UserSchema, 'users');

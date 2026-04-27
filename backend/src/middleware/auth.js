@@ -1,33 +1,48 @@
-const jwt = require('jsonwebtoken');
+const jwt  = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
-    let token;
+    const authHeader = req.headers.authorization;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        token = req.headers.authorization.split(' ')[1];
+    if (!authHeader || !/^Bearer\s+\S+/.test(authHeader)) {
+        return res.status(401).json({ success: false, error: 'Token não fornecido.' });
     }
 
-    if (!token) {
-        return res.status(401).json({ success: false, error: "Token não fornecido" });
-    }
+    const token = authHeader.split(/\s+/)[1];
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        req.user = await User.findById(decoded.id);
+        req.user = {
+            id:   decoded.id,
+            role: decoded.role || 'user',
+        };
 
-        if (!req.user) {
-            return res.status(401).json({ success: false, error: "Usuário não encontrado" });
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`[AUTH] id=${decoded.id} role=${req.user.role} → ${req.method} ${req.originalUrl}`);
         }
-
-        const isDev = process.env.NODE_ENV !== 'production';
-        if (isDev) console.log(`[AUTH] User: ${req.user.name} (${req.user._id})`);
 
         next();
     } catch (err) {
-        return res.status(401).json({ success: false, error: "Token inválido" });
+        const message = err.name === 'TokenExpiredError'
+            ? 'Token expirado. Faça login novamente.'
+            : 'Token inválido.';
+        return res.status(401).json({ success: false, error: message });
     }
 };
 
-module.exports = { protect };
+/**
+ * Middleware de autorização com base em papéis (RBAC).
+ * @param {...string} roles - Roles permitidos. Ex: authorize('admin')
+ */
+const authorize = (...roles) => (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+        return res.status(403).json({
+            success: false,
+            error:   `Acesso negado. Requer role: ${roles.join(', ')}.`,
+        });
+    }
+    next();
+};
+
+module.exports = { protect, authorize };

@@ -1,60 +1,86 @@
 import { API_URL } from './config.js';
 
-document.getElementById('resetForm').onsubmit = async function(e) {
-    e.preventDefault();
+document.addEventListener('DOMContentLoaded', () => {
+    const form        = document.getElementById('resetForm');
+    const errorMsg    = document.getElementById('errorMessage');
+    const submitBtn   = document.getElementById('submitBtn');
+    const successDiv  = document.getElementById('successMessage');
 
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const errorMsg = document.getElementById('errorMessage');
-    const submitBtn = document.getElementById('submitBtn');
-    const successDiv = document.getElementById('successMessage');
-    const form = document.getElementById('resetForm');
+    if (!form || !submitBtn) return;
 
-    // 1. Validar se as senhas são iguais
-    if (newPassword !== confirmPassword) {
-        errorMsg.innerText = "As senhas não coincidem.";
-        errorMsg.classList.remove('hidden');
-        return;
-    }
-
-    // 2. Pegar o Token da URL
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    const token     = urlParams.get('token');
 
     if (!token) {
-        errorMsg.innerText = "Token inválido ou expirado.";
-        errorMsg.classList.remove('hidden');
+        if (errorMsg) {
+            errorMsg.innerText = 'Link inválido. Solicite uma nova recuperação de senha.';
+            errorMsg.classList.remove('hidden');
+        }
+        submitBtn.disabled = true;
         return;
     }
 
-    // Estado de carregamento
-    errorMsg.classList.add('hidden');
-    submitBtn.disabled = true;
-    submitBtn.innerText = "ATUALIZANDO...";
+    form.onsubmit = async function (e) {
+        e.preventDefault();
 
-    try {
-        // 3. Enviar o POST para o Backend
-        const response = await fetch(`${API_URL}/auth/reset-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, password: newPassword })
-        });
+        const newPassword     = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
 
-        const result = await response.json();
+        // Limpa estado anterior
+        errorMsg.classList.add('hidden');
 
-        if (response.ok) {
-            form.classList.add('hidden');
-            successDiv.classList.remove('hidden');
-        } else {
-            errorMsg.innerText = result.message || "Erro ao atualizar senha.";
+        if (newPassword !== confirmPassword) {
+            errorMsg.innerText = 'As senhas não coincidem.';
             errorMsg.classList.remove('hidden');
-            submitBtn.disabled = false;
-            submitBtn.innerText = "ATUALIZAR SENHA";
+            return;
         }
-    } catch (error) {
-        errorMsg.innerText = "Erro de conexão com o servidor.";
-        errorMsg.classList.remove('hidden');
-        submitBtn.disabled = false;
-        submitBtn.innerText = "ATUALIZAR SENHA";
-    }
-};
+
+        if (newPassword.length < 6) {
+            errorMsg.innerText = 'A senha deve ter no mínimo 6 caracteres.';
+            errorMsg.classList.remove('hidden');
+            return;
+        }
+
+        const originalText    = submitBtn.innerText;
+        submitBtn.disabled    = true;
+        submitBtn.innerText   = 'ATUALIZANDO...';
+
+        const controller = new AbortController();
+        const timeoutId  = setTimeout(() => controller.abort(), 10_000);
+
+        try {
+            const response = await fetch(`${API_URL}/auth/reset-password`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ token, password: newPassword }),
+                signal:  controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            const result = await response.json();
+
+            if (response.ok) {
+                form.classList.add('hidden');
+                successDiv.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 3000);
+            } else {
+                errorMsg.innerText = result.message || 'Erro ao atualizar senha.';
+                errorMsg.classList.remove('hidden');
+                submitBtn.disabled  = false;
+                submitBtn.innerText = originalText;
+            }
+        } catch (error) {
+            clearTimeout(timeoutId);
+            const message = error.name === 'AbortError'
+                ? 'A requisição demorou muito. Tente novamente.'
+                : 'Erro de conexão com o servidor.';
+            errorMsg.innerText = message;
+            errorMsg.classList.remove('hidden');
+            submitBtn.disabled  = false;
+            submitBtn.innerText = originalText;
+        }
+    };
+});

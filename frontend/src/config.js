@@ -1,6 +1,10 @@
-const isLocal = window.location.hostname === 'localhost' || 
-                window.location.hostname === '127.0.0.1';
+const _isDev = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
-export const API_URL = isLocal
-    ? 'http://localhost:5000/api'
-    : 'https://garq-imoveis-backend.vercel.app/api';
+export const config = {
+    isDev:   _isDev,
+    apiUrl:  _isDev
+        ? 'http://localhost:5000/api'
+        : 'https://garq-imoveis.onrender.com/api',
+};
+
+export const API_URL = config.apiUrl;

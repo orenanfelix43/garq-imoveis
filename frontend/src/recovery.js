@@ -1,70 +1,88 @@
 import { API_URL } from './config.js';
 
+// ─── Helpers de UI ────────────────────────────────────────────────────────────
+function setLoading(btn, isLoading, originalText) {
+    btn.disabled = isLoading;
+    btn.innerHTML = isLoading
+        ? `<span class="flex items-center justify-center gap-2">
+               <svg class="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg"
+                    fill="none" viewBox="0 0 24 24">
+                   <circle class="opacity-25" cx="12" cy="12" r="10"
+                           stroke="currentColor" stroke-width="4"></circle>
+                   <path class="opacity-75" fill="currentColor"
+                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962
+                            7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                   </path>
+               </svg>
+               PROCESSANDO...
+           </span>`
+        : originalText;
+}
+
+function showError(el, message) {
+    el.innerText = message;
+    el.classList.remove('hidden');
+}
+
+function showSuccess(formEl, successEl) {
+    formEl.classList.add('hidden');
+    successEl.classList.remove('hidden');
+}
+
+// ─── Inicialização ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const recoveryForm = document.getElementById('recoveryForm');
-    const emailInput = document.getElementById('emailInput');
-    const errorMsg = document.getElementById('errorMessage');
-    const successDiv = document.getElementById('successMessage');
+    const emailInput   = document.getElementById('emailInput');
+    const errorMsg     = document.getElementById('errorMessage');
+    const successDiv   = document.getElementById('successMessage');
 
-    // Validação de segurança: Só executa se o formulário existir na página atual
     if (!recoveryForm) return;
 
-    recoveryForm.onsubmit = async function(e) {
+    recoveryForm.onsubmit = async function (e) {
         e.preventDefault();
 
-        const email = emailInput.value.trim();
-        const submitBtn = recoveryForm.querySelector('button');
-        
+        const email     = emailInput.value.trim();
+        const submitBtn = recoveryForm.querySelector('button[type="submit"]') || recoveryForm.querySelector('button');
+        const originalText = submitBtn.innerText;
 
-        // 1. Limpeza de estados anteriores
+        // Limpa estados anteriores
         errorMsg.classList.add('hidden');
         successDiv.classList.add('hidden');
-        
-        // 2. Feedback visual de carregamento (UX de alto nível)
-        const originalBtnText = submitBtn.innerText;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-            <span class="flex items-center justify-center gap-2">
-                <svg class="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                PROCESSANDO...
-            </span>
-        `;
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            showError(errorMsg, 'Por favor, insira um e-mail válido.');
+            return;
+        }
+
+        setLoading(submitBtn, true, originalText);
+
+        const controller = new AbortController();
+        const timeoutId  = setTimeout(() => controller.abort(), 10_000);
 
         try {
-            // 3. Chamada à API de Autenticação
             const response = await fetch(`${API_URL}/auth/forgot-password`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({ email })
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ email }),
+                signal:  controller.signal,
             });
+            clearTimeout(timeoutId);
 
-            const result = await response.json();
-
-            if (response.ok) {
-                // 4. Sucesso: Esconde o form e mostra mensagem positiva
-                recoveryForm.classList.add('hidden');
-                successDiv.classList.remove('hidden');
+            if (response.ok || response.status === 404) {
+                showSuccess(recoveryForm, successDiv);
             } else {
-                // 5. Erro de Negócio (ex: e-mail não encontrado)
-                errorMsg.innerText = result.message || "E-mail não encontrado.";
-                errorMsg.classList.remove('hidden');
-                
-                // Restaura o botão para nova tentativa
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalBtnText;
+                const result = await response.json().catch(() => ({}));
+                showError(errorMsg, result.message || 'Erro ao processar. Tente novamente.');
+                setLoading(submitBtn, false, originalText);
             }
         } catch (error) {
-            // 6. Erro de Infraestrutura (servidor offline)
-            errorMsg.innerText = "Erro de conexão. Tente novamente mais tarde.";
-            errorMsg.classList.remove('hidden');
-            
-            submitBtn.disabled = false;
-            submitBtn.innerText = originalBtnText;
+            clearTimeout(timeoutId);
+            const message = error.name === 'AbortError'
+                ? 'A requisição demorou muito. Tente novamente.'
+                : 'Erro de conexão. Verifique sua internet e tente novamente.';
+            showError(errorMsg, message);
+            setLoading(submitBtn, false, originalText);
         }
     };
 });

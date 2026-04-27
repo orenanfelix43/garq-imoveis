@@ -1,90 +1,147 @@
-const Imovel = require('../models/Imovel');
+const Imovel   = require('../models/Imovel');
+const mongoose = require('mongoose');
 
-// ==========================================
-// 1. CREATE (Criar)
-// ==========================================
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+// =============================================================================
+// 1. CREATE
+// =============================================================================
 exports.criarImovel = async (req, res) => {
     try {
         const novoImovel = await Imovel.create({
             ...req.body,
-            user: req.user.id
+            user: req.user.id,
         });
 
         res.status(201).json({ success: true, data: novoImovel });
     } catch (error) {
+        console.error('criarImovel Error:', error);
         res.status(400).json({ success: false, error: error.message });
     }
 };
 
-// ==========================================
-// 2. READ (Buscar Todos)
-// ==========================================
+// =============================================================================
+// 2. READ — Listar Todos (com paginação)
+// =============================================================================
 exports.getImoveis = async (req, res) => {
     try {
-        const imoveis = await Imovel.find();
-        
-        res.status(200).json({ 
-            success: true, 
-            count: imoveis.length, 
-            data: imoveis 
+        const page  = Math.max(1, parseInt(req.query.page)  || 1);
+        const limit = Math.min(50, parseInt(req.query.limit) || 20);
+        const skip  = (page - 1) * limit;
+
+        const filter = {};
+        if (req.query.tipo && ['casa', 'terreno', 'apartamento'].includes(req.query.tipo)) {
+            filter.tipo = req.query.tipo;
+        }
+
+        const [imoveis, total] = await Promise.all([
+            Imovel.find(filter, '-descricaoLonga').skip(skip).limit(limit).lean(),
+            Imovel.countDocuments(filter),
+        ]);
+
+        res.status(200).json({
+            success: true,
+            count:   imoveis.length,
+            total,
+            page,
+            pages:   Math.ceil(total / limit),
+            data:    imoveis,
         });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        console.error('getImoveis Error:', error);
+        res.status(500).json({ success: false, error: 'Erro ao buscar imóveis.' });
     }
 };
 
-// ==========================================
-// 3. READ (Buscar por ID)
-// ==========================================
+// =============================================================================
+// 3. READ 
+// =============================================================================
 exports.getImovel = async (req, res) => {
     try {
-        const imovel = await Imovel.findById(req.params.id);
-        
-        // Verifica se o imóvel de fato existe
-        if (!imovel) {
-            return res.status(404).json({ success: false, error: "Imóvel não encontrado." });
+        if (!isValidId(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'ID inválido.' });
         }
-        
+
+        const imovel = await Imovel.findById(req.params.id).lean();
+
+        if (!imovel) {
+            return res.status(404).json({ success: false, error: 'Imóvel não encontrado.' });
+        }
+
         res.status(200).json({ success: true, data: imovel });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        console.error('getImovel Error:', error);
+        res.status(500).json({ success: false, error: 'Erro ao buscar imóvel.' });
     }
 };
 
-// ==========================================
-// 4. UPDATE (Atualizar)
-// ==========================================
+// =============================================================================
+// 4. UPDATE
+// =============================================================================
 exports.atualizarImovel = async (req, res) => {
     try {
-        let imovel = await Imovel.findById(req.params.id);
-
-        if (!imovel) {
-            return res.status(404).json({ success: false, error: "Imóvel não encontrado." });
+        if (!isValidId(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'ID inválido.' });
         }
 
-        // Atualiza e retorna o documento novo já modificado
-        imovel = await Imovel.findByIdAndUpdate(req.params.id, req.body, {
-            new: true, // Retorna o objeto atualizado e não o antigo
-            runValidators: true // Força o Mongoose a validar as regras do Schema no Update
-        });
+        const { user, createdAt, updatedAt, _id, __v, ...updateData } = req.body;
 
-        res.status(200).json({ success: true, data: imovel });
+        const imovel = await Imovel.findById(req.params.id);
+
+        if (!imovel) {
+            return res.status(404).json({ success: false, error: 'Imóvel não encontrado.' });
+        }
+
+        if (imovel.user.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                error: 'Você não tem permissão para editar este imóvel.',
+            });
+        }
+
+        const atualizado = await Imovel.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            {
+                new:          true,  
+                runValidators: true, 
+            }
+        );
+
+        res.status(200).json({ success: true, data: atualizado });
     } catch (error) {
+        console.error('atualizarImovel Error:', error);
         res.status(400).json({ success: false, error: error.message });
     }
 };
 
-// ==========================================
-// 5. DELETE (Excluir)
-// ==========================================
+// =============================================================================
+// 5. DELETE
+// =============================================================================
 exports.deletarImovel = async (req, res) => {
     try {
-        const imovel = await Imovel.findByIdAndDelete(req.params.id);
-        if (!imovel) {
-            return res.status(404).json({ success: false, error: "Imóvel não encontrado." });
+        if (!isValidId(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'ID inválido.' });
         }
+
+        const imovel = await Imovel.findById(req.params.id);
+
+        if (!imovel) {
+            return res.status(404).json({ success: false, error: 'Imóvel não encontrado.' });
+        }
+
+        if (imovel.user.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                error: 'Você não tem permissão para excluir este imóvel.',
+            });
+        }
+
+        await imovel.deleteOne();
+
         res.status(200).json({ success: true, data: {} });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        console.error('deletarImovel Error:', error);
+        res.status(500).json({ success: false, error: 'Erro ao deletar imóvel.' });
     }
 };

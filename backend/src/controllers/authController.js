@@ -1,141 +1,238 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+const User   = require('../models/User');
+const jwt    = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const bcrypt = require('bcryptjs');
 
-// --- REGISTRO ---
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// ─── Helper: gera token JWT ───────────────────────────────────────────────────
+const signToken = (userId, role) =>
+    jwt.sign(
+        { id: userId, role },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRE || '7d' }
+    );
+
+// =============================================================================
+// REGISTRO
+// =============================================================================
 exports.register = async (req, res) => {
     try {
         const { name, email, phone, password } = req.body;
 
-        const userExists = await User.exists({ email });
-        if (userExists) {
-            return res.status(409).json({
+        if (!name || !email || !phone || !password) {
+            return res.status(400).json({
                 success: false,
-                error: 'Email já cadastrado'
+                error: 'Todos os campos são obrigatórios.',
+            });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                error: 'A senha deve ter no mínimo 6 caracteres.',
             });
         }
 
-        const user = await User.create({ name, email, phone, password });
+        const normalizedEmail = email.toLowerCase().trim();
 
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
+        const userExists = await User.exists({ email: normalizedEmail });
+        if (userExists) {
+            return res.status(409).json({ success: false, error: 'Email já cadastrado.' });
+        }
+
+        const user = await User.create({
+            name: name.trim(),
+            email: normalizedEmail,
+            phone,
+            password,
+        });
+
+        const token = signToken(user._id, user.role);
 
         return res.status(201).json({
             success: true,
             token,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+            user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
 
     } catch (error) {
         console.error('Register Error:', error);
-        return res.status(500).json({ success: false, error: 'Erro ao registrar usuário' });
+        return res.status(500).json({ success: false, error: 'Erro ao registrar usuário.' });
     }
 };
 
-// --- LOGIN ---
+// =============================================================================
+// LOGIN
+// =============================================================================
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email }).select('+password');
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email e senha são obrigatórios.',
+            });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
         if (!user) {
-            return res.status(401).json({ success: false, error: 'Credenciais inválidas' });
+            return res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
-
+        const isMatch = await user.matchPassword(password);
         if (!isMatch) {
-            return res.status(401).json({ success: false, error: 'Credenciais inválidas' });
+            return res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const token = signToken(user._id, user.role);
 
         return res.status(200).json({
             success: true,
             token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            }
+            user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
 
     } catch (error) {
         console.error('Login Error:', error);
-        return res.status(500).json({ success: false, error: 'Erro no servidor' });
+        return res.status(500).json({ success: false, error: 'Erro no servidor.' });
     }
 };
 
-// --- ESQUECI A SENHA ---
+// =============================================================================
+// ESQUECI A SENHA
+// =============================================================================
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        const user = await User.findOne({ email });
 
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'E-mail não cadastrado.' });
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'E-mail é obrigatório.' });
         }
 
-        const token = crypto.randomBytes(20).toString('hex');
-        user.resetPasswordToken = token;
-        user.resetPasswordExpires = Date.now() + 604800000;
-        await user.save();
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            }
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: 'Se este e-mail estiver cadastrado, você receberá um link em breve.',
+            });
+        }
+
+        const rawToken    = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+        user.resetPasswordToken   = hashedToken;
+        user.resetPasswordExpires = Date.now() + 3_600_000; // 1 hora
+        await user.save({ validateBeforeSave: false });
+
+        const baseUrl  = process.env.FRONTEND_URL || 'http://localhost:5500';
+        const resetUrl = `${baseUrl}/redefinir-senha.html?token=${rawToken}`;
+
+        try {
+            await transporter.sendMail({
+                from:    process.env.EMAIL_USER,
+                to:      user.email,
+                subject: 'Recuperação de Senha | GARQ Suporte',
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;
+                                padding: 32px; background: #0a0a0a; color: #fff; border-radius: 8px;">
+                        <h2 style="color: #c5a059; margin-bottom: 16px;">Recuperação de Senha</h2>
+                        <p style="color: #ccc; margin-bottom: 24px;">
+                            Você solicitou a redefinição da sua senha na GARQ.
+                            Clique no botão abaixo para prosseguir.
+                        </p>
+                        <p style="text-align: center; margin: 32px 0;">
+                            <a href="${resetUrl}"
+                               style="background: #c5a059; color: #000; padding: 14px 28px;
+                                      text-decoration: none; border-radius: 4px; font-weight: bold;
+                                      font-family: Arial, sans-serif; display: inline-block;">
+                                Redefinir Senha
+                            </a>
+                        </p>
+                        <p style="color: #888; font-size: 13px;">
+                            <strong>Este link expira em 1 hora.</strong>
+                        </p>
+                        <p style="color: #555; font-size: 11px; margin-top: 8px;">
+                            Caso o botão não funcione, copie e cole este link no navegador:<br>
+                            <a href="${resetUrl}" style="color: #c5a059; word-break: break-all;">${resetUrl}</a>
+                        </p>
+                        <hr style="border-color: #222; margin: 24px 0;">
+                        <p style="color: #555; font-size: 12px;">
+                            Se você não solicitou esta recuperação, ignore este e-mail.
+                            Sua senha permanece inalterada.
+                        </p>
+                    </div>
+                `,
+            });
+
+        } catch (mailError) {
+            console.error('[RESEND] Exceção ao enviar e-mail:', mailError.message);
+            user.resetPasswordToken   = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save({ validateBeforeSave: false });
+            return res.status(500).json({
+                success: false,
+                message: 'Não foi possível enviar o e-mail. Tente novamente mais tarde.',
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Se este e-mail estiver cadastrado, você receberá um link em breve.',
         });
-
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5500';
-        const resetUrl = `${baseUrl}/redefinir-senha.html?token=${token}`;
-
-        await transporter.sendMail({
-            to: user.email,
-            subject: 'Recuperação de Senha | GARQ Invest',
-            html: `<h1>Recuperação de Senha</h1>
-                   <p>Clique no botão abaixo para redefinir sua senha:</p>
-                   <a href="${resetUrl}" style="background: #c5a059; color: black; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Redefinir Senha</a>`
-        });
-
-        return res.status(200).json({ success: true });
 
     } catch (error) {
-        console.error("Forgot Password Error:", error);
+        console.error('Forgot Password Error:', error);
         return res.status(500).json({ success: false, message: 'Erro ao processar solicitação.' });
     }
 };
 
-// --- RESETAR SENHA ---
+// =============================================================================
+// RESETAR SENHA
+// =============================================================================
 exports.resetPassword = async (req, res) => {
     try {
         const { token, password } = req.body;
 
+        if (!token || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token e nova senha são obrigatórios.',
+            });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'A senha deve ter no mínimo 6 caracteres.',
+            });
+        }
+
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
         const user = await User.findOne({
-            resetPasswordToken: token,
-            resetPasswordExpires: { $gt: Date.now() }
+            resetPasswordToken:   hashedToken,
+            resetPasswordExpires: { $gt: Date.now() },
         });
 
         if (!user) {
             return res.status(400).json({ success: false, message: 'Link inválido ou expirado.' });
         }
 
-        user.password = password;
-        user.resetPasswordToken = undefined;
+        user.password             = password;
+        user.resetPasswordToken   = undefined;
         user.resetPasswordExpires = undefined;
-
         await user.save();
 
-        return res.status(200).json({ success: true, message: 'Senha atualizada!' });
+        return res.status(200).json({ success: true, message: 'Senha atualizada com sucesso!' });
+
     } catch (error) {
         console.error('Reset Password Error:', error);
         return res.status(500).json({ success: false, message: 'Erro interno ao resetar senha.' });
