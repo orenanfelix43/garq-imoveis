@@ -246,7 +246,7 @@ function editItem(id) {
     document.getElementById('subtitle').value        = item.subtitulo;
     document.getElementById('type').value            = item.tipo.toLowerCase();
     document.getElementById('isHighlight').checked   = item.isDestaque;
-    document.getElementById('description').value     = item.descricaoLonga || '';
+    document.getElementById('descricaoLonga').value     = item.descricaoLonga || '';
 
     tempPhotos = item.galeria ? item.galeria.map(g => ({ src: g.url, public_id: g.public_id })) : [];
     tempAttrs  = item.atributos ? [...item.atributos] : [];
@@ -295,7 +295,7 @@ function setupForm() {
             titulo:         document.getElementById('title').value,
             subtitulo:      document.getElementById('subtitle').value,
             tipo:           document.getElementById('type').value,
-            descricaoLonga: document.getElementById('description').value,
+            descricaoLonga: document.getElementById('descricaoLonga').value,
             galeria:        tempPhotos.map(p => ({ url: p.src, public_id: p.public_id })),
             atributos:      tempAttrs.filter(a => a.label && a.value),
             isDestaque:     document.getElementById('isHighlight').checked,
