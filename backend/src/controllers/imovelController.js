@@ -79,7 +79,6 @@ const uploadGaleria = async (galeria) => {
 // =============================================================================
 exports.criarImovel = async (req, res) => {
     try {
-        // CORRIGIDO: valida e sanitiza o body antes de qualquer operação
         const { error, value } = imovelSchema.validate(req.body, { stripUnknown: true, abortEarly: false });
         if (error) {
             return res.status(400).json({
@@ -118,7 +117,7 @@ exports.getImoveis = async (req, res) => {
         }
 
         const [imoveis, total] = await Promise.all([
-            Imovel.find(filter, '-descricaoLonga').skip(skip).limit(limit).lean(),
+            Imovel.find(filter).skip(skip).limit(limit).lean(),
             Imovel.countDocuments(filter),
         ]);
 

@@ -3,7 +3,7 @@ const baseUrl = "https://pub-c3e6ea3b19da44d7b869d5d7b4eaf09b.r2.dev";
 // --- NOVA CONFIGURAÇÃO DE API ---
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5000/api' 
-    : 'https://garq-imoveis-backend.vercel.app/api';
+    : 'https://garq-imoveis.onrender.com/api';
 
 const categoryVideos = {
     'todos': `${baseUrl}/Todos.mp4`,

@@ -237,24 +237,36 @@ function updateStats() {
 // 3. CRUD
 // =============================================================================
 
-function editItem(id) {
-    const item = properties.find(p => p._id === id);
-    if (!item) return;
+async function editItem(id) {
+    try {
+        const response = await fetch(`${API_URL}/imoveis/${id}`, {
+            credentials: 'include',
+        });
+        if (!response.ok) {
+            showToast('Erro ao carregar dados do imóvel.', 'error');
+            return;
+        }
+        const result = await response.json();
+        const item = result.data;
+        if (!item) return;
 
-    document.getElementById('form-id').value        = item._id;
-    document.getElementById('title').value           = item.titulo;
-    document.getElementById('subtitle').value        = item.subtitulo;
-    document.getElementById('type').value            = item.tipo.toLowerCase();
-    document.getElementById('isHighlight').checked   = item.isDestaque;
-    document.getElementById('descricaoLonga').value     = item.descricaoLonga || '';
+        document.getElementById('form-id').value           = item._id;
+        document.getElementById('title').value             = item.titulo;
+        document.getElementById('subtitle').value          = item.subtitulo;
+        document.getElementById('type').value              = item.tipo.toLowerCase();
+        document.getElementById('isHighlight').checked     = item.isDestaque;
+        document.getElementById('descricaoLonga').value    = item.descricaoLonga || '';
 
-    tempPhotos = item.galeria ? item.galeria.map(g => ({ src: g.url, public_id: g.public_id })) : [];
-    tempAttrs  = item.atributos ? [...item.atributos] : [];
+        tempPhotos = item.galeria ? item.galeria.map(g => ({ src: g.url, public_id: g.public_id })) : [];
+        tempAttrs  = item.atributos ? [...item.atributos] : [];
 
-    document.getElementById('modal-title').innerText = 'Editar Propriedade';
-    renderPhotoPreview();
-    renderAttributes();
-    document.getElementById('modal').classList.replace('hidden', 'flex');
+        document.getElementById('modal-title').innerText = 'Editar Propriedade';
+        renderPhotoPreview();
+        renderAttributes();
+        document.getElementById('modal').classList.replace('hidden', 'flex');
+    } catch (error) {
+        showToast('Falha de conexão ao carregar imóvel.', 'error');
+    }
 }
 
 async function deleteItem(id) {
