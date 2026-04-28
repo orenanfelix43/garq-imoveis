@@ -321,6 +321,10 @@ function openDetail(id) {
     startAutoSlide(totalImgs);
 }
 
+// ─── Exposição global de funções usadas por outros módulos ──────────────────
+// openDetail é chamada pelo home-api.js ao clicar em "Consultar Detalhes" do destaque
+window.openDetail = openDetail;
+
 // ─── Voltar para Home ─────────────────────────────────────────────────────────
 function showHome() {
     stopAutoSlide();
