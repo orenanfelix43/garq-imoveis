@@ -2,19 +2,22 @@ import { API_URL } from '../config.js';
 
 // ─── Constantes internas ─────────────────────────────────────────────────────
 const STORAGE_KEYS = {
-    TOKEN:    'token',
     USERNAME: 'userName',
     ROLE:     'userRole',
 };
 
-const REQUEST_TIMEOUT_MS = 10_000; // 10 segundos
+const REQUEST_TIMEOUT_MS = 10_000;
 
 // ─── Helper: fetch com timeout ────────────────────────────────────────────────
 async function fetchWithTimeout(url, options = {}) {
     const controller = new AbortController();
     const timeoutId  = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
+        const response = await fetch(url, {
+            ...options,
+            signal:      controller.signal,
+            credentials: 'include', 
+        });
         clearTimeout(timeoutId);
         return response;
     } catch (err) {
@@ -33,16 +36,16 @@ export class AuthService {
     }
 
     isAuthenticated() {
-        return !!localStorage.getItem(STORAGE_KEYS.TOKEN);
+        return !!localStorage.getItem(STORAGE_KEYS.USERNAME);
     }
 
     getToken() {
-        return localStorage.getItem(STORAGE_KEYS.TOKEN);
+        return null; 
     }
 
     _saveSession(data) {
-        this.logout(false); // false = sem redirecionamento
-        localStorage.setItem(STORAGE_KEYS.TOKEN,    data.token);
+        localStorage.removeItem(STORAGE_KEYS.USERNAME);
+        localStorage.removeItem(STORAGE_KEYS.ROLE);
         localStorage.setItem(STORAGE_KEYS.USERNAME, data.user.name);
         localStorage.setItem(STORAGE_KEYS.ROLE,     data.user.role || 'user');
     }
@@ -61,7 +64,7 @@ export class AuthService {
             throw new Error(data.error || 'Erro ao realizar cadastro.');
         }
 
-        if (data.token) this._saveSession(data);
+        if (data.user) this._saveSession(data);
 
         return data;
     }
@@ -80,17 +83,22 @@ export class AuthService {
             throw new Error(data.error || 'Falha na autenticação.');
         }
 
-        if (data.token) this._saveSession(data);
+        if (data.user) this._saveSession(data);
 
         return data;
     }
 
-    logout(redirect = true) {
-        localStorage.removeItem(STORAGE_KEYS.TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USERNAME);
-        localStorage.removeItem(STORAGE_KEYS.ROLE);
-        if (redirect) {
-            window.location.href = 'login.html';
+    // ── Logout ────────────────────────────────────────────────────────────────
+    async logout(redirect = true) {
+        try {
+            await fetchWithTimeout(`${this.apiUrl}/logout`, { method: 'POST' });
+        } catch (_) {
+        } finally {
+            localStorage.removeItem(STORAGE_KEYS.USERNAME);
+            localStorage.removeItem(STORAGE_KEYS.ROLE);
+            if (redirect) {
+                window.location.href = 'login.html';
+            }
         }
     }
 }

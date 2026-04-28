@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 // ─── Opções de conexão ────────────────────────────────────────────────────────
 const mongooseOptions = {
     serverSelectionTimeoutMS: 5000,
-    maxPoolSize: 5,
+    maxPoolSize:              parseInt(process.env.DB_POOL_SIZE) || 10,
+    minPoolSize:              2,
+    socketTimeoutMS:          45000,
+    connectTimeoutMS:         10000,
 };
 
 const connectDB = async () => {

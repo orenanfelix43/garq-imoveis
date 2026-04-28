@@ -1,23 +1,38 @@
-const User   = require('../models/User');
-const jwt    = require('jsonwebtoken');
-const crypto = require('crypto');
+const User     = require('../models/User');
+const jwt      = require('jsonwebtoken');
+const crypto   = require('crypto');
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+        pass: process.env.EMAIL_PASS,
+    },
 });
 
-// ─── Helper: gera token JWT ───────────────────────────────────────────────────
 const signToken = (userId, role) =>
     jwt.sign(
         { id: userId, role },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRE || '7d' }
     );
+
+// ─── Opções do cookie de sessão ───────────────────────────────────────────────
+const cookieOptions = () => ({
+    httpOnly: true,
+    secure:   true,
+    sameSite: 'none',
+    maxAge:   7 * 24 * 60 * 60 * 1000,
+});
+
+// ─── Opções do cookie de limpeza (logout) ─────────────────────────────────────
+const cookieClearOptions = () => ({
+    httpOnly: true,
+    secure:   true,
+    sameSite: 'none',
+    expires:  new Date(0), // força expiração imediata
+});
 
 // =============================================================================
 // REGISTRO
@@ -54,10 +69,10 @@ exports.register = async (req, res) => {
         });
 
         const token = signToken(user._id, user.role);
+        res.cookie('token', token, cookieOptions());
 
         return res.status(201).json({
             success: true,
-            token,
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
 
@@ -93,10 +108,10 @@ exports.login = async (req, res) => {
         }
 
         const token = signToken(user._id, user.role);
+        res.cookie('token', token, cookieOptions());
 
         return res.status(200).json({
             success: true,
-            token,
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
 
@@ -104,6 +119,14 @@ exports.login = async (req, res) => {
         console.error('Login Error:', error);
         return res.status(500).json({ success: false, error: 'Erro no servidor.' });
     }
+};
+
+// =============================================================================
+// LOGOUT
+// =============================================================================
+exports.logout = (_req, res) => {
+    res.cookie('token', '', cookieClearOptions());
+    return res.status(200).json({ success: true, message: 'Logout realizado com sucesso.' });
 };
 
 // =============================================================================
@@ -130,7 +153,7 @@ exports.forgotPassword = async (req, res) => {
         const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
         user.resetPasswordToken   = hashedToken;
-        user.resetPasswordExpires = Date.now() + 3_600_000; // 1 hora
+        user.resetPasswordExpires = Date.now() + 3_600_000;
         await user.save({ validateBeforeSave: false });
 
         const baseUrl  = process.env.FRONTEND_URL || 'http://localhost:5500';
@@ -174,7 +197,7 @@ exports.forgotPassword = async (req, res) => {
             });
 
         } catch (mailError) {
-            console.error('[RESEND] Exceção ao enviar e-mail:', mailError.message);
+            console.error('[MAIL] Exceção ao enviar e-mail:', mailError.message);
             user.resetPasswordToken   = undefined;
             user.resetPasswordExpires = undefined;
             await user.save({ validateBeforeSave: false });

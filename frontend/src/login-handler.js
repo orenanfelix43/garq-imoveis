@@ -28,10 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(`${API_URL}/auth/login`, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ email, password }),
-                signal:  controller.signal,
+                method:      'POST',
+                headers:     { 'Content-Type': 'application/json' },
+                body:        JSON.stringify({ email, password }),
+                signal:      controller.signal,
+                credentials: 'include', 
             });
             clearTimeout(timeoutId);
 
@@ -39,8 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.success) {
                 localStorage.clear();
-
-                localStorage.setItem('token',    result.token);
                 localStorage.setItem('userName', result.user.name);
                 localStorage.setItem('userRole', result.user.role || 'user');
 

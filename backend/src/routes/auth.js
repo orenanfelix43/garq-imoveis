@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const {
     register,
     login,
+    logout,         
     forgotPassword,
     resetPassword,
 } = require('../controllers/authController');
@@ -14,13 +15,13 @@ const loginLimiter = rateLimit({
     windowMs:        15 * 60 * 1000, // 15 minutos
     max:             10,
     message:         { success: false, error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
-    standardHeaders: true,   // Retorna headers RateLimit-* padrão (RFC 9110)
+    standardHeaders: true,
     legacyHeaders:   false,
 });
 
 const registerLimiter = rateLimit({
     windowMs:        60 * 60 * 1000, // 1 hora
-    max:             5,              // 5 cadastros/hora por IP
+    max:             5,
     message:         { success: false, error: 'Muitos cadastros deste IP. Tente novamente em 1 hora.' },
     standardHeaders: true,
     legacyHeaders:   false,
@@ -34,10 +35,19 @@ const forgotLimiter = rateLimit({
     legacyHeaders:   false,
 });
 
+const resetLimiter = rateLimit({
+    windowMs:        60 * 60 * 1000, // 1 hora
+    max:             5,
+    message:         { success: false, error: 'Muitas tentativas de redefinição. Tente novamente em 1 hora.' },
+    standardHeaders: true,
+    legacyHeaders:   false,
+});
+
 // ─── Rotas ────────────────────────────────────────────────────────────────────
 router.post('/register',        registerLimiter, register);
 router.post('/login',           loginLimiter,    login);
+router.post('/logout',                           logout);         
 router.post('/forgot-password', forgotLimiter,   forgotPassword);
-router.post('/reset-password',  loginLimiter,    resetPassword);
+router.post('/reset-password',  resetLimiter,    resetPassword);  
 
 module.exports = router;

@@ -1,12 +1,13 @@
-const express    = require('express');
-const cors       = require('cors');
-const helmet     = require('helmet');
-const compression = require('compression');
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
+const compression  = require('compression');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
-const connectDB      = require('./config/db');
-const authRoutes     = require('./routes/auth');
-const imovelRoutes   = require('./routes/imoveis');
+const connectDB    = require('./config/db');
+const authRoutes   = require('./routes/auth');
+const imovelRoutes = require('./routes/imoveis');
 
 // ─── Origens autorizadas ──────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -23,6 +24,9 @@ const allowedOrigins = [
 const app = express();
 connectDB();
 
+// ─── Trust Proxy ──────────────────────────────────────────────────────────────
+app.set('trust proxy', 1);
+
 // ─── Segurança ────────────────────────────────────────────────────────────────
 app.use(helmet());
 
@@ -32,18 +36,22 @@ app.use(compression());
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin) return callback(null, true); // curl, Postman, mobile
+        if (!origin) return callback(null, true);
         if (!allowedOrigins.includes(origin)) {
             return callback(new Error('Origem não permitida pelo CORS.'), false);
         }
         return callback(null, true);
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
 }));
 
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ limit: '5mb', extended: true }));
+// ─── Cookie Parser ────────────────────────────────────────────────────────────
+app.use(cookieParser());
+
+// ─── Body Parser ─────────────────────────────────────────────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // ─── Healthcheck ─────────────────────────────────────────────────────────────
 app.get('/', (_req, res) => {

@@ -11,13 +11,11 @@
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="canonical" href="https://garqimoveis.com.br/">
 
-    <!-- ✅ CORREÇÃO 4: Meta description adicionada -->
     <meta name="description"
         content="Explore imóveis de alto padrão e coberturas exclusivas. Experiência personalizada em investimentos imobiliários de luxo nas localizações mais nobres. Confira.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://garq-imoveis.vercel.app/assets/favicon.png">
 
-    <!-- Open Graph completo -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="GARQ Imóveis">
     <meta property="og:locale" content="pt_BR">
@@ -27,7 +25,6 @@
     <meta property="og:url" content="https://www.garqimoveis.com.br">
 
 
-    <!-- Bibliotecas Externas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
@@ -41,21 +38,18 @@
 
 <body>
 
-    <!-- Navegação -->
     <nav class="fixed w-full z-50 px-8 py-8 transition-all duration-500" id="navbar">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <a href="#inicio" class="nav-link brand-logo flex items-center">
                 <img src="assets/logo.webp" alt="GARQ IMÓVEIS" class="logo-img">
             </a>
 
-            <!-- Menu Desktop -->
             <div
                 class="hidden md:flex space-x-12 text-[10px] uppercase tracking-[0.25em] font-semibold text-white items-center">
                 <a href="#inicio" class="nav-link" data-nav="home">Início</a>
 
                 <a href="#destaque" class="nav-link">Destaque</a>
 
-                <!-- Dropdown Portfólio -->
                 <div class="relative group">
                     <a href="#imoveis" class="nav-link flex items-center gap-1 py-4">
                         Portfólio <i data-lucide="chevron-down" class="w-3 h-3"></i>
@@ -87,9 +81,7 @@
         </div>
     </nav>
 
-    <!-- Conteúdo Principal -->
     <main id="home-page" class="fade-in">
-        <!-- Hero Section -->
         <section id="inicio"
             class="relative h-screen flex items-center justify-center text-center px-6 overflow-hidden">
             <div class="hero-bg"></div>
@@ -110,38 +102,36 @@
             </div>
         </section>
 
-        <!-- Seção Destaque -->
         <section id="destaque" class="py-32 bg-white text-black">
             <div class="max-w-7xl mx-auto px-8">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                <div id="container-destaque-dinamico" class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                     <div class="relative group">
-                        <img src="assets/carrosel.webp" alt="Mansão Solar — fachada principal" width="800" height="600"
+                        <img id="img-destaque" src="assets/carrosel.webp" alt="Imóvel em Destaque" width="800" height="600"
                             loading="lazy">
                         <div class="absolute -bottom-8 -right-8 bg-gold text-black p-10 hidden md:block shadow-2xl">
                             <p class="text-[9px] uppercase tracking-widest font-black mb-2 opacity-60">Status do Ativo
                             </p>
-                            <p class="text-3xl font-serif">Disponível</p>
+                            <p id="status-destaque" class="text-3xl font-serif">Disponível</p>
                         </div>
                     </div>
                     <div class="lg:pl-10">
                         <span class="text-gold uppercase tracking-[0.4em] text-[11px] font-black mb-6 block">Residência
                             de Elite</span>
-                        <h2 class="text-4xl md:text-5xl mb-8 font-serif leading-tight">Mansão Solar | Fazenda Alvorada
-                        </h2>
+                        <h2 id="titulo-destaque" class="text-4xl md:text-5xl mb-8 font-serif leading-tight">Carregando Destaque...</h2>
                         <div class="grid grid-cols-2 gap-10 mb-12">
                             <div class="border-l-4 border-gold/20 pl-6">
                                 <span
                                     class="block text-[10px] uppercase text-gray-400 font-bold mb-1 tracking-widest">Área
                                     Total</span>
-                                <span class="text-xl font-serif">2.500 m²</span>
+                                <span id="area-destaque" class="text-xl font-serif">-- m²</span>
                             </div>
                             <div class="border-l-4 border-gold/20 pl-6">
                                 <span
                                     class="block text-[10px] uppercase text-gray-400 font-bold mb-1 tracking-widest">Tipologia</span>
-                                <span class="text-xl font-serif">06 Suítes</span>
+                                <span id="tipologia-destaque" class="text-xl font-serif">--</span>
                             </div>
                         </div>
-                        <button onclick="openDetail('mansao-solar')"
+                        <button id="btn-detalhes-destaque" onclick=""
                             class="bg-black text-white px-12 py-6 text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-gold hover:text-black transition-all duration-500 shadow-xl inline-block">Consultar
                             Detalhes</button>
                     </div>
@@ -149,7 +139,6 @@
             </div>
         </section>
 
-        <!-- Portfólio com Vídeo -->
         <section id="imoveis" class="py-32 bg-[#0a0a0a]">
             <div class="max-w-7xl mx-auto px-8">
                 <div class="text-center mb-12">
@@ -160,7 +149,6 @@
                         Ativos</h2>
                 </div>
 
-                <!-- Filtros Rápidos -->
                 <div class="flex justify-center gap-4 mb-16 overflow-x-auto pb-4">
                     <button onclick="filterPortfolio('todos')" class="filter-btn active"
                         data-filter="todos">Todos</button>
@@ -171,7 +159,6 @@
                         data-filter="apartamento">Apartamentos</button>
                 </div>
 
-                <!-- CONTAINER DO VÍDEO DINÂMICO -->
                 <div id="category-video-wrapper" class="h-0 opacity-0 mb-0 transition-all duration-700 overflow-hidden">
                     <div
                         class="relative w-full h-full overflow-hidden rounded-sm shadow-2xl bg-black border border-white/5 group">
@@ -197,11 +184,9 @@
             </div>
         </section>
 
-        <!-- SEÇÃO SOBRE NÓS (ADICIONADA) -->
         <section id="sobre" class="py-32 bg-gray-50 text-black border-t border-gray-100">
             <div class="max-w-7xl mx-auto px-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                    <!-- Conteúdo de Texto à Esquerda (Inversão visual para ritmo de scroll) -->
                     <div class="lg:pr-10 order-2 lg:order-1">
                         <span class="text-gold uppercase tracking-[0.4em] text-[11px] font-black mb-6 block">Nossa
                             Identidade</span>
@@ -226,7 +211,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Imagem à Direita -->
                     <div class="relative group order-1 lg:order-2">
                         <img src="assets/sobrenos.webp" alt="Equipe GARQ Imóveis"
                             class="rounded-sm shadow-2xl transition duration-1000 group-hover:scale-[1.02] grayscale hover:grayscale-0">
@@ -237,7 +221,6 @@
             </div>
         </section>
 
-        <!-- RESTAURAÇÃO DA SEÇÃO DE CONTATO ORIGINAL COM REDIRECIONAMENTOS -->
         <section id="contato" class="py-32 bg-white text-black relative overflow-hidden">
             <div class="max-w-7xl mx-auto px-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-24">
@@ -247,7 +230,6 @@
                         <h2 class="text-4xl md:text-6xl font-serif mb-12 leading-tight">Canais de <br>Conexão</h2>
 
                         <div class="space-y-10">
-                            <!-- E-mail -->
                             <a href="mailto:garq.imoveis@gmail.com"
                                 class="flex items-start gap-8 group transition-all hover:translate-x-2">
                                 <div
@@ -262,7 +244,6 @@
                                 </div>
                             </a>
 
-                            <!-- WhatsApp -->
                             <a href="https://wa.me/5515998440267" target="_blank" rel="noopener noreferrer"
                                 class="flex items-start gap-8 group transition-all hover:translate-x-2">
                                 <div
@@ -277,9 +258,8 @@
                                 </div>
                             </a>
 
-                            <!-- Instagram -->
                             <a href="https://www.instagram.com/garq.imoveis" target="_blank" rel="noopener noreferrer"
-                                class="flex items-start gap-8 group">
+                                class="flex items-start gap-8 group transition-all hover:translate-x-2">
                                 <div class="w-14 h-14 bg-gray-50 flex items-center justify-center rounded-full">
                                     <i data-lucide="instagram" class="text-gold w-6 h-6"></i>
                                 </div>
@@ -312,7 +292,6 @@
             </div>
         </section>
 
-        <!-- Garq Invest -->
         <section id="garqinvest" class="py-32 bg-[#0a0a0a] text-center border-t border-white/5">
             <div class="max-w-3xl mx-auto px-8">
                 <i data-lucide="trending-up" class="w-12 h-12 text-gold mx-auto mb-8"></i>
@@ -325,7 +304,6 @@
         </section>
     </main>
 
-    <!-- Página de Detalhes -->
     <section id="detail-page" class="hidden pt-40 pb-24 bg-white text-black min-h-screen fade-in">
         <div class="max-w-7xl mx-auto px-8">
             <button onclick="filterPortfolio('todos')"
@@ -350,8 +328,8 @@
                     <h5 class="text-gold text-[10px] uppercase tracking-[0.4em] font-bold mb-8">Navegação</h5>
                     <ul class="space-y-4 text-[11px] uppercase tracking-widest font-semibold text-gray-400">
                         <li><a href="#inicio" class="nav-link" class="hover:text-gold transition">Início</a></li>
-                        <li><a href="#imoveis" class="hover:text-gold transition">Portfólio</a></li>
-                        <li><a href="#contato" class="hover:text-gold transition">Contato</a></li>
+                        <li><a href="#imoveis" class="nav-link" class="hover:text-gold transition">Portfólio</a></li>
+                        <li><a href="#contato" class="nav-link" class="hover:text-gold transition">Contato</a></li>
                     </ul>
                 </div>
                 <div>

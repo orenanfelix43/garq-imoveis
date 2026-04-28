@@ -2,20 +2,33 @@ const jwt  = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
+    let token;
 
-    if (!authHeader || !/^Bearer\s+\S+/.test(authHeader)) {
-        return res.status(401).json({ success: false, error: 'Token não fornecido.' });
+    if (req.cookies?.token) {
+        token = req.cookies.token;
+    }
+    else {
+        const authHeader = req.headers.authorization;
+        if (authHeader && /^Bearer\s+\S+/.test(authHeader)) {
+            token = authHeader.split(/\s+/)[1];
+        }
     }
 
-    const token = authHeader.split(/\s+/)[1];
+    if (!token) {
+        return res.status(401).json({ success: false, error: 'Token não fornecido.' });
+    }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+        const user = await User.findById(decoded.id).select('role').lean();
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'Usuário não encontrado. Faça login novamente.' });
+        }
+
         req.user = {
             id:   decoded.id,
-            role: decoded.role || 'user',
+            role: user.role, 
         };
 
         if (process.env.NODE_ENV !== 'production') {

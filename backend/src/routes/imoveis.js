@@ -7,17 +7,19 @@ const {
     getImovel,
     atualizarImovel,
     deletarImovel,
+    setDestaque,
 } = require('../controllers/imovelController');
 
 const { protect, authorize } = require('../middleware/auth');
 
 // ─── Rotas públicas ───────────────────────────────────────────────────────────
-router.get('/',    getImoveis);   
-router.get('/:id', getImovel);    
+router.get('/',    getImoveis);
+router.get('/:id', getImovel);
 
-router.post('/',    protect,criarImovel);
-router.put('/:id',  protect,atualizarImovel);
-
+// ─── Rotas protegidas ─────────────────────────────────────────────────────────
+router.post('/',    protect,                    criarImovel);
+router.put('/:id',  protect,                    atualizarImovel);
 router.delete('/:id', protect, authorize('admin'), deletarImovel);
+router.patch('/:id/destaque', protect, authorize('admin'), setDestaque);
 
 module.exports = router;

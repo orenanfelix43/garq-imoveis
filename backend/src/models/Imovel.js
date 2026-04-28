@@ -1,64 +1,62 @@
 const mongoose = require('mongoose');
 
-// ─── Sub-schema: item da galeria ──────────────────────────────────────────────
+// Sub-schema: item da galeria com suporte a remoção
 const GaleriaItemSchema = new mongoose.Schema({
     url: {
-        type:     String,
+        type: String,
         required: true,
-        match: [/^https?:\/\/.+/, 'URL da imagem inválida. Deve começar com http(s)://'],
+        match: [/^(http|https|data):/, 'URL da imagem inválida.'],
     },
+    public_id: { 
+        type: String 
+    }, // Armazena a referência para exclusão no Cloudinary
     isPadrao: { type: Boolean, default: false },
 }, { _id: false });
 
-// ─── Sub-schema: atributo dinâmico ────────────────────────────────────────────
 const AtributoSchema = new mongoose.Schema({
     label: { type: String, required: true, trim: true, maxlength: 80 },
     value: { type: String, required: true, trim: true, maxlength: 200 },
 }, { _id: false });
 
-// ─── Schema principal ─────────────────────────────────────────────────────────
 const ImovelSchema = new mongoose.Schema(
     {
         titulo: {
-            type:      String,
-            required:  [true, 'O título é obrigatório'],
-            trim:      true,
+            type: String,
+            required: [true, 'O título é obrigatório'],
+            trim: true,
             maxlength: [200, 'Título não pode exceder 200 caracteres'],
         },
         subtitulo: {
-            type:     String,
+            type: String,
             required: [true, 'O subtítulo/localização é obrigatório'],
-            trim:     true,
+            trim: true,
         },
         tipo: {
-            type:     String,
+            type: String,
             required: true,
-            enum:     ['casa', 'terreno', 'apartamento'],
-            index:    true,
+            enum: ['casa', 'terreno', 'apartamento'],
+            index: true,
         },
         isDestaque: {
-            type:    Boolean,
+            type: Boolean,
             default: false,
-            index:   true,
+            index: true,
         },
-        galeria:       [GaleriaItemSchema],
-        atributos:     [AtributoSchema],
+        galeria: [GaleriaItemSchema],
+        atributos: [AtributoSchema],
         descricaoLonga: {
-            type:     String,
+            type: String,
             required: [true, 'A descrição longa é necessária'],
         },
         user: {
-            type:     mongoose.Schema.ObjectId,
-            ref:      'User',
+            type: mongoose.Schema.ObjectId,
+            ref: 'User',
             required: true,
         },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
-// ─── Índice de texto para busca futura ────────────────────────────────────────
 ImovelSchema.index({ titulo: 'text', subtitulo: 'text' });
 
 module.exports = mongoose.model('Imovel', ImovelSchema);
