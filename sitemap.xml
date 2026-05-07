@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://garqimoveis.com.br/</loc><priority>1.0</priority></url>
+
+  <!-- Página principal — maior prioridade, atualiza frequentemente (portfólio dinâmico) -->
+  <url>
+    <loc>https://garqimoveis.com.br/</loc>
+    <lastmod>2026-04-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
 </urlset>

@@ -1,0 +1,13 @@
+# robots.txt — GARQ Imóveis
+# https://garqimoveis.com.br/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /cadastro
+Disallow: /admin
+Disallow: /recuperar-senha
+Disallow: /redefinir-senha
+
+# Sitemap
+Sitemap: https://garqimoveis.com.br/sitemap.xml

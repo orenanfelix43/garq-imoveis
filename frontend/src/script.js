@@ -1,8 +1,8 @@
 const baseUrl = "https://pub-c3e6ea3b19da44d7b869d5d7b4eaf09b.r2.dev";
 
-// --- NOVA CONFIGURAÇÃO DE API ---
-const API_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5000/api' 
+// --- CONFIGURAÇÃO DE API ---
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:5000/api'
     : 'https://garq-imoveis.onrender.com/api';
 
 const categoryVideos = {
@@ -14,8 +14,6 @@ const categoryVideos = {
 
 // Inicia vazio, será preenchido pela API
 window.imoveisData = {};
-
-// Dados preenchidos pelo home-api.js
 
 // ─── Estado Global ────────────────────────────────────────────────────────────
 let nodes = {};
@@ -76,7 +74,6 @@ function updateCategoryVideo(filterType) {
 window.renderImoveis = function (filterType = 'todos') {
     if (!nodes.container) return;
 
-    // Inicia efeito de transição
     nodes.container.style.opacity = '0';
 
     setTimeout(() => {
@@ -87,11 +84,9 @@ window.renderImoveis = function (filterType = 'todos') {
             filterType === 'todos' || data[key].tipo === filterType
         );
 
-        // Tratamento de Estado Vazio
         if (filteredKeys.length === 0) {
             renderEmptyState();
         } else {
-            // Construção dos Cards
             filteredKeys.forEach(key => {
                 const card = createPropertyCard(key, data[key]);
                 nodes.container.appendChild(card);
@@ -104,24 +99,56 @@ window.renderImoveis = function (filterType = 'todos') {
 };
 
 /**
- * Cria o elemento HTML de um card individual (Componentização)
+ * [OTIMIZADO — SEO/Performance]
+ * Cria o elemento HTML de um card individual via DOM API (sem innerHTML).
+ * - Alt descritivo com tipo e subtítulo para Google Image Search
+ * - width/height explícitos para evitar CLS (Cumulative Layout Shift)
+ * - decoding="async" para não bloquear a thread principal
  */
 function createPropertyCard(key, item) {
     const card = document.createElement('div');
     card.className = "glass-card group overflow-hidden cursor-pointer fade-in";
     card.addEventListener('click', () => openDetail(key));
 
-    card.innerHTML = `
-        <div class="h-80 overflow-hidden">
-            <img src="${item.imagens[0]}" alt="${item.titulo}" loading="lazy" 
-                 class="w-full h-full object-cover transition duration-1000 group-hover:scale-110">
-        </div>
-        <div class="p-8">
-            <h3 class="text-xl font-serif text-white mb-2">${item.titulo}</h3>
-            <p class="text-[10px] uppercase tracking-widest text-gold mb-6">${item.subtitulo}</p>
-            <span class="text-gold text-[9px] uppercase tracking-[0.3em] font-bold">Ver Ficha Técnica →</span>
-        </div>
-    `;
+    // Alt descritivo: inclui tipo e subtítulo para SEO de imagem
+    const altText = `${item.titulo} — ${item.subtitulo || item.tipo} | GARQ Imóveis`;
+
+    const imgWrapper = document.createElement('div');
+    imgWrapper.className = 'h-80 overflow-hidden';
+
+    const img = document.createElement('img');
+    img.src = item.imagens[0];
+    img.alt = altText;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.width = 600;
+    img.height = 400;
+    img.className = 'w-full h-full object-cover transition duration-1000 group-hover:scale-110';
+
+    imgWrapper.appendChild(img);
+
+    const body = document.createElement('div');
+    body.className = 'p-8';
+
+    const h3 = document.createElement('h3');
+    h3.className = 'text-xl font-serif text-white mb-2';
+    h3.textContent = item.titulo;
+
+    const sub = document.createElement('p');
+    sub.className = 'text-[10px] uppercase tracking-widest text-gold mb-6';
+    sub.textContent = item.subtitulo;
+
+    const cta = document.createElement('span');
+    cta.className = 'text-gold text-[9px] uppercase tracking-[0.3em] font-bold';
+    cta.textContent = 'Ver Ficha Técnica →';
+
+    body.appendChild(h3);
+    body.appendChild(sub);
+    body.appendChild(cta);
+
+    card.appendChild(imgWrapper);
+    card.appendChild(body);
+
     return card;
 }
 
@@ -154,34 +181,37 @@ function filterPortfolio(filterType = 'todos', shouldScroll = true) {
     // Reset de estado: Se estiver em detalhes, volta para a home
     if (nodes.home && nodes.home.classList.contains('hidden')) showHome();
 
-    // Atualização Visual (Vídeo e Títulos)
     updateCategoryVideo(filterType);
     updateFilterUI(filterType);
 
-    // Scroll Suave
     if (shouldScroll) {
         scrollToContainer('imoveis');
     }
 
-    // Executa a renderização dos dados
     window.renderImoveis(filterType);
 }
 
 /**
- * Atualiza classes de botões e textos de título
+ * [OTIMIZADO — SEO/Acessibilidade]
+ * Atualiza classes de botões, títulos e aria-pressed.
+ * - Títulos com keywords geolocalizadas para SEO local
+ * - aria-pressed informa leitores de tela sobre o filtro ativo
  */
 function updateFilterUI(filterType) {
     const titles = {
-        'todos': 'Inventário de Ativos',
-        'casa': 'Casas de Alto Padrão',
-        'terreno': 'Terrenos e Lotes',
-        'apartamento': 'Apartamentos Exclusivos'
+        'todos': 'Portfólio de Imóveis',
+        'casa': 'Casas de Alto Padrão em Sorocaba',
+        'terreno': 'Terrenos e Lotes Exclusivos',
+        'apartamento': 'Apartamentos de Alto Padrão'
     };
 
     if (nodes.title) nodes.title.innerText = titles[filterType] || titles['todos'];
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === filterType);
+        const isActive = btn.dataset.filter === filterType;
+        btn.classList.toggle('active', isActive);
+        // Acessibilidade: aria-pressed informa leitores de tela sobre o estado do botão
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
 }
 
@@ -215,7 +245,6 @@ function stopAutoSlide() {
 }
 
 // ─── Página de Detalhes ───────────────────────────────────────────────────────
-// FIX: função openDetail sem redeclaração interna, com DOM seguro (sem innerHTML para dados)
 function openDetail(id) {
     const data = imoveisData[id];
     if (!data) return;
@@ -232,10 +261,13 @@ function openDetail(id) {
     track.id = "slider-track";
     track.className = "flex transition-transform duration-700";
 
-    data.imagens.forEach(imgSrc => {
+    data.imagens.forEach((imgSrc, index) => {
         const img = document.createElement('img');
         img.src = imgSrc;
-        img.alt = data.titulo;
+        // Alt descritivo com número da imagem para SEO
+        img.alt = `${data.titulo} — foto ${index + 1} | GARQ Imóveis`;
+        img.loading = index === 0 ? 'eager' : 'lazy';
+        img.decoding = 'async';
         img.className = "w-full h-auto flex-shrink-0 object-cover";
         track.appendChild(img);
     });
@@ -245,20 +277,20 @@ function openDetail(id) {
         const btnPrev = document.createElement('button');
         btnPrev.className = "absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 hover:bg-gold opacity-0 group-hover:opacity-100";
         btnPrev.setAttribute('aria-label', 'Imagem anterior');
-        btnPrev.innerHTML = '<i data-lucide="chevron-left"></i>';
+        btnPrev.innerHTML = '<i data-lucide="chevron-left" aria-hidden="true"></i>';
         btnPrev.addEventListener('click', () => moveSlide(-1, totalImgs));
 
         const btnNext = document.createElement('button');
         btnNext.className = "absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 hover:bg-gold opacity-0 group-hover:opacity-100";
         btnNext.setAttribute('aria-label', 'Próxima imagem');
-        btnNext.innerHTML = '<i data-lucide="chevron-right"></i>';
+        btnNext.innerHTML = '<i data-lucide="chevron-right" aria-hidden="true"></i>';
         btnNext.addEventListener('click', () => moveSlide(1, totalImgs));
 
         galleryCol.appendChild(btnPrev);
         galleryCol.appendChild(btnNext);
     }
 
-    // --- Coluna direita: informações do imóvel (100% via textContent — seguro contra XSS) ---
+    // --- Coluna direita: informações do imóvel (via textContent — seguro contra XSS) ---
     const infoCol = document.createElement('div');
 
     const subtituloEl = document.createElement('span');
@@ -297,6 +329,7 @@ function openDetail(id) {
     ctaLink.href = "https://wa.me/5515998440267";
     ctaLink.target = "_blank";
     ctaLink.rel = "noopener noreferrer";
+    ctaLink.setAttribute('aria-label', `Solicitar atendimento private para ${data.titulo}`);
     ctaLink.className = "w-full bg-black text-white px-16 py-6 text-[11px] uppercase tracking-[0.4em] font-bold hover:bg-gold transition-all text-center block";
     ctaLink.textContent = "Solicitar Atendimento Private";
 
@@ -322,8 +355,8 @@ function openDetail(id) {
 }
 
 // ─── Exposição global de funções usadas por outros módulos ──────────────────
-// openDetail é chamada pelo home-api.js ao clicar em "Consultar Detalhes" do destaque
 window.openDetail = openDetail;
+window.filterPortfolio = filterPortfolio;
 
 // ─── Voltar para Home ─────────────────────────────────────────────────────────
 function showHome() {
@@ -342,7 +375,7 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true });
 
-// ─── FIX: único ponto de inicialização (sem duplicatas) ───────────────────────
+// ─── Inicialização ────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
     mapNodes();
 

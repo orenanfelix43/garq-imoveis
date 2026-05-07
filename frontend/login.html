@@ -1,18 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | GARQ Invest</title>
 
-    <link rel="icon" type="image/jpeg" href="assets/favicon.png">
+    <title>Login | GARQ Invest — Plataforma do Investidor</title>
 
+    <!-- Impede indexação da página de login -->
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://garqimoveis.com.br/login">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+
+    <!-- Tailwind CDN mantido: o layout depende das classes utilitárias dele -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;600;700&display=swap"
         rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Versão fixada + defer (evita @latest instável e não bloqueia parser) -->
+    <script src="https://unpkg.com/lucide@0.473.0/dist/umd/lucide.min.js" defer></script>
 
     <link rel="stylesheet" href="login.css">
 </head>
@@ -22,30 +32,42 @@
     <div class="login-container px-6">
         <div class="login-card fade-in">
             <div class="text-center mb-10">
-
-                <span class="text-gold uppercase tracking-[0.4em] text-[10px] font-bold block mb-2">Plataforma do
-                    Investidor</span>
-                <h2 class="text-2xl font-serif text-white">GARQ Invest</h2>
+                <a href="index.html" aria-label="Voltar para GARQ Imóveis">
+                    <img src="assets/logo.webp" alt="GARQ Imóveis"
+                        style="height:48px;width:auto;object-fit:contain;margin:0 auto 16px;"
+                        width="140" height="48" loading="eager">
+                </a>
+                <span class="text-gold uppercase tracking-[0.4em] text-[10px] font-bold block mb-2">Plataforma do Investidor</span>
+                <h1 class="text-2xl font-serif text-white">GARQ Invest</h1>
             </div>
 
-            <form id="loginForm" class="space-y-6">
+            <form id="loginForm" class="space-y-6" novalidate aria-label="Formulário de login">
                 <div>
-                    <label
+                    <label for="loginEmail"
                         class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">E-mail</label>
-                    <input type="email" id="loginEmail" class="login-input" placeholder="seunome@email.com.br" required>
+                    <input type="email" id="loginEmail" name="email" class="login-input"
+                        placeholder="seunome@email.com.br"
+                        autocomplete="email"
+                        required
+                        aria-required="true"
+                        aria-describedby="loginErrorMessage">
                 </div>
 
                 <div>
-                    <label
+                    <label for="loginPass"
                         class="block text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">Senha</label>
-                    <input type="password" id="loginPass" class="login-input" placeholder="••••••••" required>
+                    <input type="password" id="loginPass" name="password" class="login-input"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        required
+                        aria-required="true">
 
                     <div class="flex justify-end mt-2">
                         <a href="recuperar-senha.html" class="aux-link">Esqueci minha senha</a>
                     </div>
                 </div>
 
-                <p id="loginErrorMessage"
+                <p id="loginErrorMessage" role="alert"
                     class="hidden text-[9px] uppercase tracking-tighter text-red-500 mt-2 font-bold italic text-center">
                 </p>
 
@@ -54,6 +76,7 @@
                     Entrar no Sistema
                 </button>
             </form>
+
             <div class="mt-6 text-center">
                 <!-- <p class="text-[11px] uppercase tracking-widest text-gray-400 font-light">
                     Não possui uma conta?
@@ -63,15 +86,15 @@
 
             <div class="mt-8 pt-6 border-t border-white/5 text-center">
                 <a href="index.html"
-                    class="text-[10px] uppercase tracking-widest text-gray-500 hover:text-gold transition">
-                    <i data-lucide="arrow-left" class="w-3 h-3 inline mr-1"></i> Voltar ao início
+                    class="text-[10px] uppercase tracking-widest text-gray-500 hover:text-gold transition"
+                    aria-label="Voltar ao site GARQ Imóveis">
+                    <i data-lucide="arrow-left" class="w-3 h-3 inline mr-1" aria-hidden="true"></i> Voltar ao início
                 </a>
             </div>
         </div>
     </div>
 
     <script>
-        // Inicializa ícones Lucide
         window.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) window.lucide.createIcons();
         });
