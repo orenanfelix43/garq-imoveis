@@ -6,8 +6,9 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const connectDB    = require('./config/db');
-const authRoutes   = require('./routes/auth');
-const imovelRoutes = require('./routes/imoveis');
+const authRoutes       = require('./routes/auth');
+const imovelRoutes     = require('./routes/imoveis');
+const documentoRoutes  = require('./routes/documentos');
 
 // ─── Origens autorizadas ──────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -63,8 +64,9 @@ app.get('/', (_req, res) => {
 });
 
 // ─── Rotas ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',    authRoutes);
-app.use('/api/imoveis', imovelRoutes);
+app.use('/api/auth',                        authRoutes);
+app.use('/api/imoveis',                     imovelRoutes);
+app.use('/api/imoveis/:imovelId/documentos', documentoRoutes);
 
 // ─── Handler 404 ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

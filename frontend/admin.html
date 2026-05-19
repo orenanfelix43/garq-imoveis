@@ -218,6 +218,60 @@
     </div>
 
 
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         MODAL DE DOCUMENTOS
+    ════════════════════════════════════════════════════════════════ -->
+    <div id="modal-docs" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-[100] items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border-gold/20">
+
+            <!-- Cabeçalho -->
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+                <div>
+                    <h3 id="modal-docs-title" class="font-serif text-xl uppercase tracking-widest text-gold">Documentos</h3>
+                    <p id="modal-docs-subtitle" class="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5"></p>
+                </div>
+                <button onclick="closeDocsModal()" class="text-gray-400 hover:text-white transition">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <!-- Área de upload -->
+            <div class="p-6 border-b border-white/10 bg-black/20">
+                <p class="text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-3">Novo Documento</p>
+                <div id="docs-dropzone"
+                    class="border border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-gold/40 hover:bg-white/[0.02] transition-all">
+                    <i data-lucide="upload-cloud" class="w-8 h-8 text-gray-600"></i>
+                    <p class="text-xs text-gray-500 uppercase tracking-widest">Arraste ou clique para selecionar</p>
+                    <p class="text-[9px] text-gray-600 uppercase tracking-widest">PDF · Word · Excel · TXT — máx. 10 MB</p>
+                    <input type="file" id="docs-file-input" class="hidden"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.txt">
+                </div>
+                <div id="docs-upload-progress" class="hidden mt-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                            <div id="docs-progress-bar" class="h-full bg-gold transition-all duration-300" style="width:0%"></div>
+                        </div>
+                        <span id="docs-progress-label" class="text-[10px] text-gold uppercase tracking-widest whitespace-nowrap">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de documentos -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-6">
+                    <p class="text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-4">Arquivos Salvos</p>
+                    <div id="docs-list" class="space-y-2">
+                        <div class="p-8 text-center">
+                            <i data-lucide="loader" class="w-5 h-5 text-gray-600 mx-auto animate-spin"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <script type="module" src="src/admin.js"></script>
 </body>
 
