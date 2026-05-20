@@ -62,10 +62,11 @@ exports.register = async (req, res) => {
         }
 
         const user = await User.create({
-            name: name.trim(),
+            name:  name.trim(),
             email: normalizedEmail,
             phone,
             password,
+            role:  'user', // sempre forçado — nunca aceitar do req.body
         });
 
         const token = signToken(user._id, user.role);

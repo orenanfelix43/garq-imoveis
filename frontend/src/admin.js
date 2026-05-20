@@ -516,7 +516,7 @@ function renderAttributes() {
 // =============================================================================
 
 function setupLogout() {
-    const logoutBtn = document.querySelector('button.text-red-400');
+    const logoutBtn = document.getElementById('logout-btn');
     if (!logoutBtn) return;
 
     logoutBtn.onclick = async () => {

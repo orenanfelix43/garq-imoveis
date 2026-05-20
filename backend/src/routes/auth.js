@@ -5,10 +5,14 @@ const rateLimit = require('express-rate-limit');
 const {
     register,
     login,
-    logout,         
+    logout,
     forgotPassword,
     resetPassword,
 } = require('../controllers/authController');
+
+// protectStrict reservado para rotas que precisam confirmar existência do user no banco
+// (ex: troca de senha autenticada, exclusão de conta)
+const { protect, protectStrict, authorize } = require('../middleware/auth');
 
 
 const loginLimiter = rateLimit({
