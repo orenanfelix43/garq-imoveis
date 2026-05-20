@@ -14,7 +14,41 @@ exports.listarUsuarios = async (req, res, next) => {
     }
 };
 
-// ─── Remover usuário ──────────────────────────────────────────────────────────
+// ─── Alterar role de um usuário ───────────────────────────────────────────────
+exports.alterarRole = async (req, res, next) => {
+    try {
+        const { role } = req.body;
+
+        if (!['user', 'admin'].includes(role)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Role inválido. Use "user" ou "admin".',
+            });
+        }
+
+        // Admin não pode alterar a própria role
+        if (req.params.id === req.user.id) {
+            return res.status(400).json({
+                success: false,
+                error: 'Você não pode alterar a sua própria role.',
+            });
+        }
+
+        const usuario = await User.findByIdAndUpdate(
+            req.params.id,
+            { role },
+            { new: true, runValidators: true }
+        ).select('name email role');
+
+        if (!usuario) {
+            return res.status(404).json({ success: false, error: 'Usuário não encontrado.' });
+        }
+
+        return res.json({ success: true, data: usuario });
+    } catch (err) {
+        next(err);
+    }
+};
 exports.removerUsuario = async (req, res, next) => {
     try {
         // Admin não pode remover a si mesmo

@@ -164,6 +164,25 @@
                 <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Senha</label>
                 <input type="password" id="novo-user-senha" class="input-field" placeholder="Mínimo 6 caracteres">
             </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-3">Nível de Acesso</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition-all has-[:checked]:border-gold/40 has-[:checked]:bg-gold/5">
+                        <input type="radio" name="novo-user-role" value="user" checked class="accent-gold">
+                        <div>
+                            <p class="text-xs font-medium text-white uppercase tracking-widest">Usuário</p>
+                            <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5">Acesso padrão</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition-all has-[:checked]:border-gold/40 has-[:checked]:bg-gold/5">
+                        <input type="radio" name="novo-user-role" value="admin" class="accent-gold">
+                        <div>
+                            <p class="text-xs font-medium text-gold uppercase tracking-widest">Admin</p>
+                            <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5">Acesso total</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
             <div id="novo-user-erro" class="hidden text-[10px] text-red-400 uppercase tracking-widest"></div>
             <div class="flex justify-end gap-4 pt-2">
                 <button onclick="fecharModalNovoUsuario()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>

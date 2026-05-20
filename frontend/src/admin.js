@@ -72,17 +72,43 @@ async function loadSelects() {
 }
 
 function setupSearch() {
-    const searchInput = document.getElementById('search-input');
+    const searchInput   = document.getElementById('search-input');
+    const filterStatus  = document.getElementById('filter-status');
     if (!searchInput) return;
 
-    searchInput.oninput = (e) => {
-        const term     = e.target.value.toLowerCase();
-        const filtered = properties.filter(p =>
-            p.titulo.toLowerCase().includes(term) ||
-            p.subtitulo.toLowerCase().includes(term)
-        );
+    function applyFilters() {
+        const term   = searchInput.value.toLowerCase();
+        const status = filterStatus?.value || '';
+
+        const filtered = properties.filter(p => {
+            const matchText = !term ||
+                p.titulo.toLowerCase().includes(term) ||
+                p.subtitulo.toLowerCase().includes(term);
+            const matchStatus = !status || (p.status || '') === status;
+            return matchText && matchStatus;
+        });
+
         renderList(document.getElementById('property-list'), filtered);
-    };
+    }
+
+    searchInput.oninput  = applyFilters;
+    if (filterStatus) filterStatus.onchange = applyFilters;
+}
+
+function populateStatusFilter() {
+    const filterStatus = document.getElementById('filter-status');
+    if (!filterStatus) return;
+
+    // Coletar status únicos dos imóveis carregados
+    const statusUnicos = [...new Set(
+        properties.map(p => p.status).filter(s => s && s.trim())
+    )].sort();
+
+    // Manter opção "Todos" e adicionar os status encontrados
+    filterStatus.innerHTML = '<option value="">Todos os status</option>' +
+        statusUnicos.map(s =>
+            `<option value="${esc(s)}">${esc(s.replace(/_/g, ' '))}</option>`
+        ).join('');
 }
 
 function loadUserDisplay() {
@@ -114,6 +140,7 @@ async function fetchProperties() {
         if (result.success) {
             properties = result.data;
             renderList(propertyList, properties);
+            populateStatusFilter();
             updateStats();
         } else {
             showToast('Erro ao carregar inventário.', 'error');
@@ -149,11 +176,15 @@ function renderList(container, dataToRender) {
                         <img src="${esc(safeUrl)}" class="w-full h-full object-cover" onerror="this.src='assets/placeholder.webp'">
                     </div>
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 mb-1">
                             <h5 class="font-serif uppercase tracking-widest text-sm">${esc(p.titulo)}</h5>
                             ${p.isDestaque ? '<span class="text-[9px] bg-gold/20 text-gold px-2 py-0.5 rounded border border-gold/30 uppercase font-bold tracking-tighter">Destaque</span>' : ''}
                         </div>
-                        <p class="text-[10px] text-gray-500 uppercase tracking-tighter">${esc(p.subtitulo)} | ${esc(p.tipo)}</p>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-tighter">${esc(p.subtitulo)} | ${esc(p.tipo)}</p>
+                            ${p.status ? `<span class="text-[8px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border border-gold/30 bg-gold/10 text-gold">${esc(p.status.replace(/_/g, ' '))}</span>` : ''}
+                            ${p.finalidade ? `<span class="text-[8px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border border-white/10 bg-white/5 text-gray-400">${esc(p.finalidade.replace(/_/g, ' '))}</span>` : ''}
+                        </div>
                     </div>
                 </div>
                 <div class="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -61,12 +61,15 @@ exports.register = async (req, res) => {
             return res.status(409).json({ success: false, error: 'Email já cadastrado.' });
         }
 
+        // role só aceita 'user' ou 'admin' — qualquer outro valor cai para 'user'
+        const rolePermitido = ['user', 'admin'].includes(req.body.role) ? req.body.role : 'user';
+
         const user = await User.create({
             name:  name.trim(),
             email: normalizedEmail,
             phone,
             password,
-            role:  'user', // sempre forçado — nunca aceitar do req.body
+            role:  rolePermitido,
         });
 
         const token = signToken(user._id, user.role);

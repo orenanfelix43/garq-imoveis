@@ -357,22 +357,26 @@ function renderUsuarios(container, usuarios) {
     }
 
     const roleStyle = (role) => role === 'admin'
-        ? 'text-gold border-gold/30 bg-gold/10'
-        : 'text-gray-400 border-white/10 bg-white/5';
+        ? 'text-gold border-gold/30 bg-gold/10 hover:bg-gold/20'
+        : 'text-gray-400 border-white/10 bg-white/5 hover:bg-white/10';
 
     container.innerHTML = usuarios.map(u => `
         <div class="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-all group">
             <div class="flex items-center gap-4 min-w-0">
                 <div class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="user" class="w-4 h-4 text-gray-500"></i>
+                    <i data-lucide="${u.role === 'admin' ? 'shield' : 'user'}" class="w-4 h-4 ${u.role === 'admin' ? 'text-gold' : 'text-gray-500'}"></i>
                 </div>
                 <div class="min-w-0">
                     <p class="text-xs font-medium text-white truncate">${esc(u.name)}</p>
                     <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5">${esc(u.email)}</p>
                 </div>
             </div>
-            <div class="flex items-center gap-4 flex-shrink-0">
-                <span class="text-[8px] uppercase tracking-widest font-bold border px-2 py-1 rounded ${roleStyle(u.role)}">${esc(u.role)}</span>
+            <div class="flex items-center gap-3 flex-shrink-0">
+                <button onclick="alterarRole('${esc(u._id)}', '${esc(u.role)}')"
+                    class="text-[8px] uppercase tracking-widest font-bold border px-3 py-1.5 rounded transition-all cursor-pointer ${roleStyle(u.role)}"
+                    title="Clique para ${u.role === 'admin' ? 'rebaixar para usuário' : 'promover a admin'}">
+                    ${esc(u.role)}
+                </button>
                 <button onclick="removerUsuario('${esc(u._id)}', '${esc(u.name)}')"
                     class="p-1.5 rounded text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100" title="Remover usuário">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -389,6 +393,10 @@ function abrirModalNovoUsuario() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    // Resetar role para 'user'
+    const radioUser = document.querySelector('input[name="novo-user-role"][value="user"]');
+    if (radioUser) radioUser.checked = true;
+
     const erroEl = document.getElementById('novo-user-erro');
     if (erroEl) erroEl.classList.add('hidden');
     document.getElementById('modal-novo-usuario').classList.replace('hidden', 'flex');
@@ -404,6 +412,7 @@ async function criarUsuario() {
     const email = document.getElementById('novo-user-email').value.trim();
     const phone = document.getElementById('novo-user-phone').value.trim();
     const senha = document.getElementById('novo-user-senha').value;
+    const role  = document.querySelector('input[name="novo-user-role"]:checked')?.value || 'user';
     const erroEl = document.getElementById('novo-user-erro');
 
     erroEl.classList.add('hidden');
@@ -424,7 +433,7 @@ async function criarUsuario() {
             method:      'POST',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body:        JSON.stringify({ name: nome, email, phone, password: senha }),
+            body:        JSON.stringify({ name: nome, email, phone, password: senha, role }),
         });
         if (response.status === 401) { window.location.href = 'login.html'; return; }
 
@@ -465,6 +474,36 @@ async function removerUsuario(id, nome) {
     }
 }
 
+async function alterarRole(id, roleAtual) {
+    const novoRole = roleAtual === 'admin' ? 'user' : 'admin';
+    const msg = novoRole === 'admin'
+        ? 'Promover este usuário a administrador?'
+        : 'Rebaixar este usuário para acesso padrão?';
+
+    const ok = await showConfirm(msg);
+    if (!ok) return;
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios/${id}/role`, {
+            method:      'PATCH',
+            headers:     { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body:        JSON.stringify({ role: novoRole }),
+        });
+        if (response.status === 401) { window.location.href = 'login.html'; return; }
+
+        const result = await response.json();
+        if (result.success) {
+            showToast(`Usuário ${novoRole === 'admin' ? 'promovido a admin' : 'rebaixado para usuário'}.`, 'success');
+            await fetchUsuarios();
+        } else {
+            showToast(result.error || 'Erro ao alterar role.', 'error');
+        }
+    } catch {
+        showToast('Falha de conexão.', 'error');
+    }
+}
+
 // =============================================================================
 // ESCOPO GLOBAL
 // =============================================================================
@@ -479,9 +518,10 @@ window.adicionarItem         = adicionarItem;
 window.salvarLabelInline     = salvarLabelInline;
 window.toggleItem            = toggleItem;
 window.removerItem           = removerItem;
-window.abrirModalNovoUsuario = abrirModalNovoUsuario;
-window.fecharModalNovoUsuario= fecharModalNovoUsuario;
-window.criarUsuario          = criarUsuario;
-window.removerUsuario        = removerUsuario;
+window.abrirModalNovoUsuario  = abrirModalNovoUsuario;
+window.fecharModalNovoUsuario = fecharModalNovoUsuario;
+window.criarUsuario           = criarUsuario;
+window.removerUsuario         = removerUsuario;
+window.alterarRole            = alterarRole;
 
 document.addEventListener('DOMContentLoaded', init);
