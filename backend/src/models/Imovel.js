@@ -32,10 +32,20 @@ const ImovelSchema = new mongoose.Schema(
             trim: true,
         },
         tipo: {
-            type: String,
+            type:     String,
             required: true,
-            enum: ['casa', 'terreno', 'apartamento'],
-            index: true,
+            trim:     true,
+            index:    true,
+        },
+        status: {
+            type:    String,
+            trim:    true,
+            default: '',
+        },
+        finalidade: {
+            type:    String,
+            trim:    true,
+            default: '',
         },
         isDestaque: {
             type: Boolean,

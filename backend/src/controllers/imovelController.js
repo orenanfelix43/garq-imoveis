@@ -23,16 +23,17 @@ async function pLimit(items, fn, concurrency = 3) {
 
 const imovelSchema = Joi.object({
     titulo:         Joi.string().max(200).required().messages({
-        'string.max':  'Título não pode exceder 200 caracteres.',
+        'string.max':   'Título não pode exceder 200 caracteres.',
         'any.required': 'O título é obrigatório.',
     }),
     subtitulo:      Joi.string().required().messages({
         'any.required': 'O subtítulo/localização é obrigatório.',
     }),
-    tipo:           Joi.string().valid('casa', 'terreno', 'apartamento').required().messages({
-        'any.only':    'Tipo deve ser casa, terreno ou apartamento.',
+    tipo:           Joi.string().max(100).required().messages({
         'any.required': 'O tipo é obrigatório.',
     }),
+    status:         Joi.string().max(100).allow('').default(''),
+    finalidade:     Joi.string().max(100).allow('').default(''),
     descricaoLonga: Joi.string().required().messages({
         'any.required': 'A descrição longa é necessária.',
     }),

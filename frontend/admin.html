@@ -53,6 +53,12 @@
                 <span class="text-xs uppercase tracking-widest">Dashboard Admin</span>
             </a> -->
 
+            <a href="configuracoes.html"
+                class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
+                <i data-lucide="settings-2" class="w-4 h-4"></i>
+                <span class="text-xs uppercase tracking-widest">Configurações</span>
+            </a>
+
             <a href="index.html"
                 class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
                 <i data-lucide="external-link" class="w-4 h-4"></i>
@@ -161,6 +167,21 @@
                             <input type="checkbox" id="isHighlight" class="w-4 h-4 accent-[#c5a059] mr-3">
                             <label for="isHighlight" class="text-xs text-gray-300">Definir como principal</label>
                         </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Status</label>
+                        <select id="status" class="input-field appearance-none">
+                            <option value="">— Selecione —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Finalidade</label>
+                        <select id="finalidade" class="input-field appearance-none">
+                            <option value="">— Selecione —</option>
+                        </select>
                     </div>
                 </div>
 

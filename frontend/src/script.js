@@ -105,16 +105,28 @@ window.renderImoveis = function (filterType = 'todos') {
  * - width/height explícitos para evitar CLS (Cumulative Layout Shift)
  * - decoding="async" para não bloquear a thread principal
  */
+function getStatusStyle(status) {
+    const s = (status || '').toLowerCase();
+    if (s.includes('venda') || s === 'a_venda')
+        return { bg: 'rgba(197,160,89,0.95)', color: '#0a0a0a' };
+    if (s.includes('aluguel') || s.includes('locacao') || s.includes('locação'))
+        return { bg: 'rgba(59,130,246,0.92)', color: '#fff' };
+    if (s.includes('vendido'))
+        return { bg: 'rgba(60,60,60,0.95)', color: '#aaa' };
+    if (s.includes('locado'))
+        return { bg: 'rgba(60,60,60,0.95)', color: '#aaa' };
+    return { bg: 'rgba(20,20,20,0.92)', color: '#c5a059' };
+}
+
 function createPropertyCard(key, item) {
     const card = document.createElement('div');
     card.className = "glass-card group overflow-hidden cursor-pointer fade-in";
     card.addEventListener('click', () => openDetail(key));
 
-    // Alt descritivo: inclui tipo e subtítulo para SEO de imagem
     const altText = `${item.titulo} — ${item.subtitulo || item.tipo} | GARQ Imóveis`;
 
     const imgWrapper = document.createElement('div');
-    imgWrapper.className = 'h-80 overflow-hidden';
+    imgWrapper.className = 'h-80 overflow-hidden relative';
 
     const img = document.createElement('img');
     img.src = item.imagens[0];
@@ -124,8 +136,33 @@ function createPropertyCard(key, item) {
     img.width = 600;
     img.height = 400;
     img.className = 'w-full h-full object-cover transition duration-1000 group-hover:scale-110';
-
     imgWrapper.appendChild(img);
+
+    // Ribbon de status sobreposto à foto — canto superior esquerdo
+    if (item.status) {
+        const style = getStatusStyle(item.status);
+        const ribbon = document.createElement('div');
+        ribbon.style.cssText = `
+            position: absolute;
+            top: 20px;
+            left: 0;
+            background: ${style.bg};
+            color: ${style.color};
+            font-size: 9px;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            padding: 7px 18px 7px 16px;
+            backdrop-filter: blur(6px);
+            clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%);
+            pointer-events: none;
+            z-index: 10;
+            white-space: nowrap;
+        `;
+        ribbon.textContent = item.status.replace(/_/g, ' ');
+        imgWrapper.appendChild(ribbon);
+    }
 
     const body = document.createElement('div');
     body.className = 'p-8';
@@ -298,8 +335,52 @@ function openDetail(id) {
     subtituloEl.textContent = data.subtitulo;
 
     const tituloEl = document.createElement('h2');
-    tituloEl.className = "text-4xl md:text-6xl font-serif mb-8 leading-tight";
+    tituloEl.className = "text-4xl md:text-6xl font-serif mb-6 leading-tight";
     tituloEl.textContent = data.titulo;
+
+    // Status e Finalidade — padrão visual do site: linha dourada, sem pill
+    const badgesRow = document.createElement('div');
+    badgesRow.className = 'flex items-center gap-6 mb-8';
+
+    if (data.status) {
+        const wrap = document.createElement('div');
+        wrap.className = 'flex flex-col gap-1';
+
+        const lbl = document.createElement('span');
+        lbl.className = 'text-[8px] uppercase tracking-[0.3em] text-gray-500';
+        lbl.textContent = 'Status';
+
+        const val = document.createElement('span');
+        val.className = 'text-[11px] uppercase tracking-[0.25em] font-bold text-gold border-b border-gold/40 pb-1';
+        val.textContent = data.status.replace(/_/g, ' ');
+
+        wrap.appendChild(lbl);
+        wrap.appendChild(val);
+        badgesRow.appendChild(wrap);
+    }
+
+    if (data.status && data.finalidade) {
+        const sep = document.createElement('div');
+        sep.className = 'w-px h-6 bg-gray-700 self-end mb-1';
+        badgesRow.appendChild(sep);
+    }
+
+    if (data.finalidade) {
+        const wrap = document.createElement('div');
+        wrap.className = 'flex flex-col gap-1';
+
+        const lbl = document.createElement('span');
+        lbl.className = 'text-[8px] uppercase tracking-[0.3em] text-gray-500';
+        lbl.textContent = 'Finalidade';
+
+        const val = document.createElement('span');
+        val.className = 'text-[11px] uppercase tracking-[0.25em] font-bold text-gray-300 border-b border-gray-600 pb-1';
+        val.textContent = data.finalidade.replace(/_/g, ' ');
+
+        wrap.appendChild(lbl);
+        wrap.appendChild(val);
+        badgesRow.appendChild(wrap);
+    }
 
     const descEl = document.createElement('p');
     descEl.className = "text-gray-600 text-lg leading-relaxed mb-12 font-light italic";
@@ -335,6 +416,7 @@ function openDetail(id) {
 
     infoCol.appendChild(subtituloEl);
     infoCol.appendChild(tituloEl);
+    infoCol.appendChild(badgesRow);
     infoCol.appendChild(descEl);
     infoCol.appendChild(detalhesGrid);
     infoCol.appendChild(ctaLink);

@@ -29,13 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dynamicData = {};
 
         lista.forEach(imovel => {
-            dynamicData[imovel._id] = {
-                tipo:      imovel.tipo.toLowerCase(),
-                titulo:    imovel.titulo,
-                subtitulo: imovel.subtitulo,
-                imagens:   imovel.galeria ? imovel.galeria.map(img => img.url) : (imovel.imagens || []),
-                descricao: imovel.descricaoLonga || imovel.descricao || '',
-                detalhes:  imovel.atributos || imovel.detalhes || [],
+        dynamicData[imovel._id] = {
+                tipo:       imovel.tipo.toLowerCase(),
+                titulo:     imovel.titulo,
+                subtitulo:  imovel.subtitulo,
+                imagens:    imovel.galeria ? imovel.galeria.map(img => img.url) : (imovel.imagens || []),
+                descricao:  imovel.descricaoLonga || imovel.descricao || '',
+                detalhes:   imovel.atributos || imovel.detalhes || [],
+                status:     imovel.status     || '',
+                finalidade: imovel.finalidade  || '',
             };
         });
 

@@ -120,10 +120,44 @@ async function init() {
     loadUserDisplay();
     setupFileInput();
     setupSearch();
-    setupForm();   
-    setupLogout(); 
-    await fetchProperties();
+    setupForm();
+    setupLogout();
+    await Promise.all([fetchProperties(), loadSelects()]);
     if (window.lucide) lucide.createIcons();
+}
+
+let rotulosAtributos = []; // opções carregadas da configuração
+
+async function loadSelects() {
+    const chaves = ['tipos_imovel', 'status_imovel', 'finalidades'];
+    const ids    = { tipos_imovel: 'type', status_imovel: 'status', finalidades: 'finalidade' };
+
+    // Carrega os selects do formulário de imóvel
+    await Promise.all(chaves.map(async (chave) => {
+        try {
+            const res    = await fetch(`${API_URL}/configuracoes/chave/${chave}`);
+            const result = await res.json();
+            if (!result.success) return;
+
+            const select = document.getElementById(ids[chave]);
+            if (!select) return;
+
+            const itensAtivos = result.data.itens.filter(i => i.ativo);
+            const opcoes = itensAtivos.map(i =>
+                `<option value="${esc(i.valor)}">${esc(i.label)}</option>`
+            ).join('');
+            select.innerHTML = `<option value="">— Selecione —</option>${opcoes}`;
+        } catch (_) {}
+    }));
+
+    // Carrega rótulos de atributos para uso no createRowElement
+    try {
+        const res    = await fetch(`${API_URL}/configuracoes/chave/rotulos_atributos`);
+        const result = await res.json();
+        if (result.success) {
+            rotulosAtributos = result.data.itens.filter(i => i.ativo);
+        }
+    } catch (_) {}
 }
 
 function setupSearch() {
@@ -253,12 +287,17 @@ async function editItem(id) {
         const item = result.data;
         if (!item) return;
 
+        // Garante selects populados antes de setar os valores salvos
+        await loadSelects();
+
         document.getElementById('form-id').value           = item._id;
         document.getElementById('title').value             = item.titulo;
         document.getElementById('subtitle').value          = item.subtitulo;
         document.getElementById('type').value              = item.tipo.toLowerCase();
         document.getElementById('isHighlight').checked     = item.isDestaque;
         document.getElementById('descricaoLonga').value    = item.descricaoLonga || '';
+        document.getElementById('status').value            = item.status    || '';
+        document.getElementById('finalidade').value        = item.finalidade || '';
 
         tempPhotos = item.galeria ? item.galeria.map(g => ({ src: g.url, public_id: g.public_id })) : [];
         tempAttrs  = item.atributos ? [...item.atributos] : [];
@@ -310,6 +349,8 @@ function setupForm() {
             titulo:         document.getElementById('title').value,
             subtitulo:      document.getElementById('subtitle').value,
             tipo:           document.getElementById('type').value,
+            status:         document.getElementById('status').value,
+            finalidade:     document.getElementById('finalidade').value,
             descricaoLonga: document.getElementById('descricaoLonga').value,
             galeria:        tempPhotos.map(p => ({ url: p.src, public_id: p.public_id })),
             atributos:      tempAttrs.filter(a => a.label && a.value),
@@ -361,6 +402,8 @@ function openModal(mode) {
     if (mode === 'add') document.getElementById('modal-title').innerText = 'Adicionar Imóvel';
     renderPhotoPreview();
     renderAttributes();
+    // form.reset() apaga os selects dinâmicos — repopular após reset
+    loadSelects();
     document.getElementById('modal').classList.replace('hidden', 'flex');
 }
 
@@ -419,19 +462,36 @@ function addAttrRow() {
 function createRowElement(attr, index) {
     const div     = document.createElement('div');
     div.className = 'flex gap-2 mb-2';
+
+    // Monta as opções do select — inclui o valor atual mesmo se não estiver na lista
+    const opcoesBase = rotulosAtributos.map(r =>
+        `<option value="${esc(r.label)}" ${attr.label === r.label ? 'selected' : ''}>${esc(r.label)}</option>`
+    ).join('');
+
+    // Se o label salvo não está na lista (foi renomeado ou removido), adiciona como opção
+    const labelSalvoNaLista = rotulosAtributos.some(r => r.label === attr.label);
+    const opcaoSalva = attr.label && !labelSalvoNaLista
+        ? `<option value="${esc(attr.label)}" selected>${esc(attr.label)}</option>`
+        : '';
+
     div.innerHTML = `
-        <input type="text" class="bg-black/40 border border-white/10 p-2 text-xs flex-1 rounded"
-               placeholder="Rótulo" value="${esc(attr.label)}">
+        <select class="bg-black/40 border border-white/10 p-2 text-xs flex-1 rounded appearance-none">
+            <option value="">— Rótulo —</option>
+            ${opcaoSalva}
+            ${opcoesBase}
+        </select>
         <input type="text" class="bg-black/40 border border-white/10 p-2 text-xs flex-1 rounded"
                placeholder="Valor" value="${esc(attr.value)}">
-        <button type="button" class="text-red-500 hover:text-red-400 transition-colors">
+        <button type="button" class="text-red-500 hover:text-red-400 transition-colors flex-shrink-0">
             <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
     `;
 
-    const [inputLabel, inputValue] = div.querySelectorAll('input');
-    inputLabel.oninput = (e) => { tempAttrs[index].label = e.target.value; };
-    inputValue.oninput = (e) => { tempAttrs[index].value = e.target.value; };
+    const selectLabel = div.querySelector('select');
+    const inputValue  = div.querySelector('input');
+
+    selectLabel.onchange = (e) => { tempAttrs[index].label = e.target.value; };
+    inputValue.oninput   = (e) => { tempAttrs[index].value = e.target.value; };
 
     div.querySelector('button').onclick = () => {
         tempAttrs.splice(index, 1);

@@ -6,9 +6,11 @@ const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 const connectDB    = require('./config/db');
-const authRoutes       = require('./routes/auth');
-const imovelRoutes     = require('./routes/imoveis');
-const documentoRoutes  = require('./routes/documentos');
+const authRoutes           = require('./routes/auth');
+const imovelRoutes         = require('./routes/imoveis');
+const documentoRoutes      = require('./routes/documentos');
+const configuracaoRoutes   = require('./routes/configuracoes');
+const { seedConfiguracoes } = require('./controllers/configuracaoController');
 
 // ─── Origens autorizadas ──────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -23,7 +25,7 @@ const allowedOrigins = [
 ];
 
 const app = express();
-connectDB();
+connectDB().then(() => seedConfiguracoes());
 
 // ─── Trust Proxy ──────────────────────────────────────────────────────────────
 app.set('trust proxy', 1);
@@ -64,9 +66,10 @@ app.get('/', (_req, res) => {
 });
 
 // ─── Rotas ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',                        authRoutes);
-app.use('/api/imoveis',                     imovelRoutes);
+app.use('/api/auth',                         authRoutes);
+app.use('/api/imoveis',                      imovelRoutes);
 app.use('/api/imoveis/:imovelId/documentos', documentoRoutes);
+app.use('/api/configuracoes',                configuracaoRoutes);
 
 // ─── Handler 404 ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
