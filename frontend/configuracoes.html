@@ -60,9 +60,29 @@
             <p class="text-gold text-[10px] uppercase tracking-[0.4em] mb-2">Painel Administrativo</p>
             <h2 class="text-3xl font-serif uppercase tracking-tight">Configurações</h2>
         </div>
-        <button onclick="abrirModalNovaLista()" class="btn-primary flex items-center gap-2">
-            <i data-lucide="plus" class="w-4 h-4"></i> Nova Lista
-        </button>
+        <div class="flex gap-3">
+            <button onclick="abrirModalNovoUsuario()" class="flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs uppercase tracking-widest text-gray-300 hover:text-white transition-all">
+                <i data-lucide="user-plus" class="w-4 h-4"></i> Novo Usuário
+            </button>
+            <button onclick="abrirModalNovaLista()" class="btn-primary flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i> Nova Lista
+            </button>
+        </div>
+    </div>
+
+    <!-- Seção de Usuários -->
+    <div class="glass-panel rounded-2xl overflow-hidden shadow-xl mb-6">
+        <div class="p-6 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+            <div>
+                <h4 class="font-serif text-sm uppercase tracking-widest">Usuários do Sistema</h4>
+                <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">Apenas administradores podem criar ou remover usuários</p>
+            </div>
+        </div>
+        <div id="usuarios-container" class="divide-y divide-white/5">
+            <div class="p-8 text-center">
+                <i data-lucide="loader" class="w-5 h-5 text-gray-600 mx-auto animate-spin"></i>
+            </div>
+        </div>
     </div>
 
     <div id="listas-container" class="space-y-6">
@@ -120,6 +140,47 @@
     </div>
 </div>
 
+<!-- Modal Novo Usuário -->
+<div id="modal-novo-usuario" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-[100] items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-gold/20">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+            <h3 class="font-serif text-lg uppercase tracking-widest text-gold">Novo Usuário</h3>
+            <button onclick="fecharModalNovoUsuario()" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Nome</label>
+                <input type="text" id="novo-user-nome" class="input-field" placeholder="Nome completo">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">E-mail</label>
+                <input type="email" id="novo-user-email" class="input-field" placeholder="email@exemplo.com">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Telefone</label>
+                <input type="text" id="novo-user-phone" class="input-field" placeholder="(11) 99999-9999">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Senha</label>
+                <input type="password" id="novo-user-senha" class="input-field" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div id="novo-user-erro" class="hidden text-[10px] text-red-400 uppercase tracking-widest"></div>
+            <div class="flex justify-end gap-4 pt-2">
+                <button onclick="fecharModalNovoUsuario()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
+                <button onclick="criarUsuario()" class="btn-primary">Criar Usuário</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuração global — única fonte de verdade para variáveis de ambiente -->
+<script>
+    window.__GARQ_CONFIG__ = {
+        API_URL: ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://localhost:5000/api'
+            : 'https://garq-imoveis.onrender.com/api'
+    };
+</script>
 <script type="module" src="src/configuracoes.js"></script>
 </body>
 </html>

@@ -10,6 +10,7 @@ const authRoutes           = require('./routes/auth');
 const imovelRoutes         = require('./routes/imoveis');
 const documentoRoutes      = require('./routes/documentos');
 const configuracaoRoutes   = require('./routes/configuracoes');
+const usuarioRoutes        = require('./routes/usuarios');
 const { seedConfiguracoes } = require('./controllers/configuracaoController');
 
 // ─── Origens autorizadas ──────────────────────────────────────────────────────
@@ -52,10 +53,6 @@ app.use(cors({
 // ─── Cookie Parser ────────────────────────────────────────────────────────────
 app.use(cookieParser());
 
-// ─── Body Parser ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
-
 // ─── Healthcheck ─────────────────────────────────────────────────────────────
 app.get('/', (_req, res) => {
     res.json({
@@ -65,11 +62,15 @@ app.get('/', (_req, res) => {
     });
 });
 
-// ─── Rotas ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',                         authRoutes);
-app.use('/api/imoveis',                      imovelRoutes);
-app.use('/api/imoveis/:imovelId/documentos', documentoRoutes);
-app.use('/api/configuracoes',                configuracaoRoutes);
+// ─── Rotas com limite de body por grupo ───────────────────────────────────────
+// Auth e operações simples: 10kb — texto puro, sem uploads
+app.use('/api/auth',        express.json({ limit: '10kb' }),  express.urlencoded({ limit: '10kb',  extended: true }), authRoutes);
+app.use('/api/usuarios',    express.json({ limit: '10kb' }),  express.urlencoded({ limit: '10kb',  extended: true }), usuarioRoutes);
+app.use('/api/configuracoes', express.json({ limit: '50kb' }), express.urlencoded({ limit: '50kb', extended: true }), configuracaoRoutes);
+
+// Imóveis e documentos: 15mb — recebem imagens/PDFs em base64
+app.use('/api/imoveis',                      express.json({ limit: '15mb' }), express.urlencoded({ limit: '15mb', extended: true }), imovelRoutes);
+app.use('/api/imoveis/:imovelId/documentos', express.json({ limit: '15mb' }), express.urlencoded({ limit: '15mb', extended: true }), documentoRoutes);
 
 // ─── Handler 404 ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {

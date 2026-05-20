@@ -1,12 +1,6 @@
 const Documento  = require('../models/Documento');
 const Imovel     = require('../models/Imovel');
-const cloudinary = require('cloudinary').v2;
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key:    process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
-});
+const cloudinary = require('../config/cloudinary');
 
 // Tipos MIME permitidos → mapeamento para resource_type do Cloudinary
 const TIPOS_PERMITIDOS = new Map([
@@ -68,22 +62,22 @@ exports.uploadDocumento = async (req, res, next) => {
             return res.status(404).json({ success: false, error: 'Imóvel não encontrado.' });
         }
 
-        // PDF → resource_type 'image' (Cloudinary suporta PDF nativamente,
-        // gera URL /image/upload/ com Content-Type correto — abre no browser e no Google Docs Viewer)
-        // Demais → resource_type 'raw' com flag de attachment para download correto
-        const isPdf         = tipo === 'application/pdf';
-        const resourceType  = isPdf ? 'image' : 'raw';
-        const publicId      = `${imovelId}_${Date.now()}_${nome.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const isPdf        = tipo === 'application/pdf';
+        const resourceType = isPdf ? 'image' : 'raw';
+        // Remove a extensão do nome para o public_id — o Cloudinary adiciona a extensão automaticamente
+        const nomeBase     = nome.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const publicId     = `${imovelId}_${Date.now()}_${nomeBase}`;
 
         const uploadOptions = {
             folder:        'imoveis_documentos',
             resource_type: resourceType,
             public_id:     publicId,
+            access_mode:   'public',   // garante URL pública sem autenticação
             timeout:       30000,
         };
 
         if (isPdf) {
-            uploadOptions.format = 'pdf'; // garante que o Cloudinary preserve como PDF
+            uploadOptions.format = 'pdf';
         }
 
         // Upload para Cloudinary

@@ -10,37 +10,31 @@ const {
     resetPassword,
 } = require('../controllers/authController');
 
-// protectStrict reservado para rotas que precisam confirmar existência do user no banco
-// (ex: troca de senha autenticada, exclusão de conta)
-const { protect, protectStrict, authorize } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
+// ─── Rate limiters ────────────────────────────────────────────────────────────
 
+// Login: 10 tentativas por 15 min por IP
 const loginLimiter = rateLimit({
-    windowMs:        15 * 60 * 1000, // 15 minutos
+    windowMs:        15 * 60 * 1000,
     max:             10,
     message:         { success: false, error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
     standardHeaders: true,
     legacyHeaders:   false,
 });
 
-const registerLimiter = rateLimit({
-    windowMs:        60 * 60 * 1000, // 1 hora
-    max:             5,
-    message:         { success: false, error: 'Muitos cadastros deste IP. Tente novamente em 1 hora.' },
-    standardHeaders: true,
-    legacyHeaders:   false,
-});
-
+// Recuperação de senha: 3 por hora por IP
 const forgotLimiter = rateLimit({
-    windowMs:        60 * 60 * 1000, // 1 hora
+    windowMs:        60 * 60 * 1000,
     max:             3,
     message:         { success: false, error: 'Muitas solicitações de recuperação. Tente novamente em 1 hora.' },
     standardHeaders: true,
     legacyHeaders:   false,
 });
 
+// Reset de senha: 5 por hora por IP
 const resetLimiter = rateLimit({
-    windowMs:        60 * 60 * 1000, // 1 hora
+    windowMs:        60 * 60 * 1000,
     max:             5,
     message:         { success: false, error: 'Muitas tentativas de redefinição. Tente novamente em 1 hora.' },
     standardHeaders: true,
@@ -48,10 +42,13 @@ const resetLimiter = rateLimit({
 });
 
 // ─── Rotas ────────────────────────────────────────────────────────────────────
-router.post('/register',        registerLimiter, register);
-router.post('/login',           loginLimiter,    login);
-router.post('/logout',                           logout);         
-router.post('/forgot-password', forgotLimiter,   forgotPassword);
-router.post('/reset-password',  resetLimiter,    resetPassword);  
+
+// Registro protegido: apenas admin autenticado pode criar novos usuários
+router.post('/register',        protect, authorize('admin'), register);
+
+router.post('/login',           loginLimiter, login);
+router.post('/logout',          logout);
+router.post('/forgot-password', forgotLimiter, forgotPassword);
+router.post('/reset-password',  resetLimiter,  resetPassword);
 
 module.exports = router;

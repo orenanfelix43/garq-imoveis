@@ -1,13 +1,7 @@
-const Imovel   = require('../models/Imovel');
-const mongoose = require('mongoose');
-const cloudinary = require('cloudinary').v2;
-const Joi      = require('joi');
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key:    process.env.CLOUDINARY_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET,
-});
+const Imovel     = require('../models/Imovel');
+const mongoose   = require('mongoose');
+const cloudinary = require('../config/cloudinary');
+const Joi        = require('joi');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -113,8 +107,8 @@ exports.getImoveis = async (req, res) => {
         const skip  = (page - 1) * limit;
 
         const filter = {};
-        if (req.query.tipo && ['casa', 'terreno', 'apartamento'].includes(req.query.tipo)) {
-            filter.tipo = req.query.tipo;
+        if (req.query.tipo && typeof req.query.tipo === 'string' && req.query.tipo.length <= 100) {
+            filter.tipo = req.query.tipo.trim();
         }
 
         const [imoveis, total] = await Promise.all([

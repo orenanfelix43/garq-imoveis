@@ -1,9 +1,7 @@
 const baseUrl = "https://pub-c3e6ea3b19da44d7b869d5d7b4eaf09b.r2.dev";
 
-// --- CONFIGURAÇÃO DE API ---
-const API_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:5000/api'
-    : 'https://garq-imoveis.onrender.com/api';
+// API_URL definida em index.html via window.__GARQ_CONFIG__ — única fonte de verdade
+const API_URL = window.__GARQ_CONFIG__?.API_URL ?? 'https://garq-imoveis.onrender.com/api';
 
 const categoryVideos = {
     'todos': `${baseUrl}/Todos.mp4`,
@@ -105,17 +103,19 @@ window.renderImoveis = function (filterType = 'todos') {
  * - width/height explícitos para evitar CLS (Cumulative Layout Shift)
  * - decoding="async" para não bloquear a thread principal
  */
+// Mapeamento exato por valor interno (mesmo valor cadastrado em Configuracao.status_imovel)
+// Para adicionar novos status: cadastrar nas Configurações e adicionar a entrada aqui
+const STATUS_STYLES = new Map([
+    ['a_venda',   { bg: 'rgba(197,160,89,0.95)', color: '#0a0a0a' }],
+    ['aluguel',   { bg: 'rgba(59,130,246,0.92)',  color: '#fff'    }],
+    ['vendido',   { bg: 'rgba(60,60,60,0.95)',    color: '#aaa'    }],
+    ['locado',    { bg: 'rgba(60,60,60,0.95)',    color: '#aaa'    }],
+]);
+
+const STATUS_STYLE_DEFAULT = { bg: 'rgba(20,20,20,0.92)', color: '#c5a059' };
+
 function getStatusStyle(status) {
-    const s = (status || '').toLowerCase();
-    if (s.includes('venda') || s === 'a_venda')
-        return { bg: 'rgba(197,160,89,0.95)', color: '#0a0a0a' };
-    if (s.includes('aluguel') || s.includes('locacao') || s.includes('locação'))
-        return { bg: 'rgba(59,130,246,0.92)', color: '#fff' };
-    if (s.includes('vendido'))
-        return { bg: 'rgba(60,60,60,0.95)', color: '#aaa' };
-    if (s.includes('locado'))
-        return { bg: 'rgba(60,60,60,0.95)', color: '#aaa' };
-    return { bg: 'rgba(20,20,20,0.92)', color: '#c5a059' };
+    return STATUS_STYLES.get((status || '').toLowerCase()) ?? STATUS_STYLE_DEFAULT;
 }
 
 function createPropertyCard(key, item) {

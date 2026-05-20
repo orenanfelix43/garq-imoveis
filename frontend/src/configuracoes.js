@@ -1,4 +1,5 @@
 import { API_URL } from './config.js';
+import { esc, showToast, showConfirm } from './ui-helpers.js';
 
 let configs       = [];
 let configAtualId = null; // id da lista aberta no modal de novo item
@@ -7,63 +8,11 @@ let configAtualId = null; // id da lista aberta no modal de novo item
 // HELPERS
 // =============================================================================
 
-function esc(str) {
-    const d = document.createElement('div');
-    d.textContent = str ?? '';
-    return d.innerHTML;
-}
-
 function slugify(str) {
     return str.trim().toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_|_$/g, '');
-}
-
-function showToast(message, type = 'info', duration = 4000) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const colors = {
-        success: 'border-l-green-500 bg-green-500/10',
-        error:   'border-l-red-500 bg-red-500/10',
-        info:    'border-l-[#c5a059] bg-[#c5a059]/10',
-    };
-    const icons = { success: 'check-circle', error: 'x-circle', info: 'info' };
-    const iconColors = { success: 'text-green-400', error: 'text-red-400', info: 'text-[#c5a059]' };
-    const toast = document.createElement('div');
-    toast.className = `pointer-events-auto flex items-start gap-3 px-5 py-4 rounded-sm border border-white/10 border-l-2 backdrop-blur-md ${colors[type]} text-white shadow-2xl max-w-sm w-full opacity-0 transition-all duration-300`;
-    toast.innerHTML = `
-        <i data-lucide="${icons[type]}" class="w-4 h-4 mt-0.5 flex-shrink-0 ${iconColors[type]}"></i>
-        <p class="text-xs leading-relaxed flex-1 uppercase tracking-widest">${esc(message)}</p>
-        <button class="text-gray-500 hover:text-white" onclick="this.parentElement.remove()">
-            <i data-lucide="x" class="w-3 h-3"></i>
-        </button>`;
-    container.appendChild(toast);
-    if (window.lucide) lucide.createIcons();
-    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.replace('opacity-0', 'opacity-100')));
-    setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, duration);
-}
-
-function showConfirm(message) {
-    return new Promise((resolve) => {
-        const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998] flex items-center justify-center p-4';
-        overlay.innerHTML = `
-            <div class="bg-[#111] border border-white/10 rounded-sm p-8 max-w-sm w-full shadow-2xl">
-                <div class="flex items-center gap-3 mb-6">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500 flex-shrink-0"></i>
-                    <p class="text-sm uppercase tracking-widest text-white/80">${esc(message)}</p>
-                </div>
-                <div class="flex gap-3">
-                    <button id="confirm-cancel" class="flex-1 border border-white/10 py-3 text-xs uppercase tracking-widest text-gray-400 hover:text-white transition-all rounded-sm">Cancelar</button>
-                    <button id="confirm-ok" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 text-xs uppercase tracking-widest font-bold transition-all rounded-sm">Confirmar</button>
-                </div>
-            </div>`;
-        document.body.appendChild(overlay);
-        if (window.lucide) lucide.createIcons();
-        overlay.querySelector('#confirm-ok').onclick     = () => { overlay.remove(); resolve(true); };
-        overlay.querySelector('#confirm-cancel').onclick = () => { overlay.remove(); resolve(false); };
-    });
 }
 
 // =============================================================================
@@ -73,7 +22,7 @@ function showConfirm(message) {
 async function init() {
     loadUserDisplay();
     setupLogout();
-    await fetchConfigs();
+    await Promise.all([fetchConfigs(), fetchUsuarios()]);
     if (window.lucide) lucide.createIcons();
 }
 
@@ -379,18 +328,160 @@ async function removerItem(configId, itemId) {
 }
 
 // =============================================================================
+// USUÁRIOS
+// =============================================================================
+
+async function fetchUsuarios() {
+    const container = document.getElementById('usuarios-container');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios`, { credentials: 'include' });
+        if (response.status === 401) { window.location.href = 'login.html'; return; }
+        if (response.status === 403) {
+            container.innerHTML = `<p class="text-[10px] text-gray-600 uppercase tracking-widest text-center p-8">Acesso restrito a administradores.</p>`;
+            return;
+        }
+
+        const result = await response.json();
+        if (result.success) renderUsuarios(container, result.data);
+    } catch {
+        container.innerHTML = `<p class="text-[10px] text-gray-600 uppercase tracking-widest text-center p-8">Falha ao carregar usuários.</p>`;
+    }
+}
+
+function renderUsuarios(container, usuarios) {
+    if (!usuarios || usuarios.length === 0) {
+        container.innerHTML = `<p class="text-[10px] text-gray-600 uppercase tracking-widest text-center p-8">Nenhum usuário cadastrado.</p>`;
+        return;
+    }
+
+    const roleStyle = (role) => role === 'admin'
+        ? 'text-gold border-gold/30 bg-gold/10'
+        : 'text-gray-400 border-white/10 bg-white/5';
+
+    container.innerHTML = usuarios.map(u => `
+        <div class="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-all group">
+            <div class="flex items-center gap-4 min-w-0">
+                <div class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="user" class="w-4 h-4 text-gray-500"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs font-medium text-white truncate">${esc(u.name)}</p>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5">${esc(u.email)}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 flex-shrink-0">
+                <span class="text-[8px] uppercase tracking-widest font-bold border px-2 py-1 rounded ${roleStyle(u.role)}">${esc(u.role)}</span>
+                <button onclick="removerUsuario('${esc(u._id)}', '${esc(u.name)}')"
+                    class="p-1.5 rounded text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100" title="Remover usuário">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    if (window.lucide) lucide.createIcons();
+}
+
+function abrirModalNovoUsuario() {
+    ['novo-user-nome', 'novo-user-email', 'novo-user-phone', 'novo-user-senha'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const erroEl = document.getElementById('novo-user-erro');
+    if (erroEl) erroEl.classList.add('hidden');
+    document.getElementById('modal-novo-usuario').classList.replace('hidden', 'flex');
+    setTimeout(() => document.getElementById('novo-user-nome')?.focus(), 100);
+}
+
+function fecharModalNovoUsuario() {
+    document.getElementById('modal-novo-usuario').classList.replace('flex', 'hidden');
+}
+
+async function criarUsuario() {
+    const nome  = document.getElementById('novo-user-nome').value.trim();
+    const email = document.getElementById('novo-user-email').value.trim();
+    const phone = document.getElementById('novo-user-phone').value.trim();
+    const senha = document.getElementById('novo-user-senha').value;
+    const erroEl = document.getElementById('novo-user-erro');
+
+    erroEl.classList.add('hidden');
+
+    if (!nome || !email || !phone || !senha) {
+        erroEl.textContent = 'Todos os campos são obrigatórios.';
+        erroEl.classList.remove('hidden');
+        return;
+    }
+    if (senha.length < 6) {
+        erroEl.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+        erroEl.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method:      'POST',
+            headers:     { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body:        JSON.stringify({ name: nome, email, phone, password: senha }),
+        });
+        if (response.status === 401) { window.location.href = 'login.html'; return; }
+
+        const result = await response.json();
+        if (result.success) {
+            fecharModalNovoUsuario();
+            showToast('Usuário criado com sucesso.', 'success');
+            await fetchUsuarios();
+        } else {
+            erroEl.textContent = result.error || 'Erro ao criar usuário.';
+            erroEl.classList.remove('hidden');
+        }
+    } catch {
+        erroEl.textContent = 'Falha de conexão.';
+        erroEl.classList.remove('hidden');
+    }
+}
+
+async function removerUsuario(id, nome) {
+    const ok = await showConfirm(`Remover o usuário "${nome}" permanentemente?`);
+    if (!ok) return;
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+            method: 'DELETE', credentials: 'include',
+        });
+        if (response.status === 401) { window.location.href = 'login.html'; return; }
+
+        const result = await response.json();
+        if (result.success) {
+            showToast('Usuário removido.', 'success');
+            await fetchUsuarios();
+        } else {
+            showToast(result.error || 'Erro ao remover usuário.', 'error');
+        }
+    } catch {
+        showToast('Falha de conexão.', 'error');
+    }
+}
+
+// =============================================================================
 // ESCOPO GLOBAL
 // =============================================================================
 
-window.abrirModalNovaLista  = abrirModalNovaLista;
-window.fecharModalNovaLista = fecharModalNovaLista;
-window.criarLista           = criarLista;
-window.deletarLista         = deletarLista;
-window.abrirModalNovoItem   = abrirModalNovoItem;
-window.fecharModalNovoItem  = fecharModalNovoItem;
-window.adicionarItem        = adicionarItem;
-window.salvarLabelInline    = salvarLabelInline;
-window.toggleItem           = toggleItem;
-window.removerItem          = removerItem;
+window.abrirModalNovaLista   = abrirModalNovaLista;
+window.fecharModalNovaLista  = fecharModalNovaLista;
+window.criarLista            = criarLista;
+window.deletarLista          = deletarLista;
+window.abrirModalNovoItem    = abrirModalNovoItem;
+window.fecharModalNovoItem   = fecharModalNovoItem;
+window.adicionarItem         = adicionarItem;
+window.salvarLabelInline     = salvarLabelInline;
+window.toggleItem            = toggleItem;
+window.removerItem           = removerItem;
+window.abrirModalNovoUsuario = abrirModalNovoUsuario;
+window.fecharModalNovoUsuario= fecharModalNovoUsuario;
+window.criarUsuario          = criarUsuario;
+window.removerUsuario        = removerUsuario;
 
 document.addEventListener('DOMContentLoaded', init);
