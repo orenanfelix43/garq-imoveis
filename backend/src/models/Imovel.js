@@ -52,6 +52,11 @@ const ImovelSchema = new mongoose.Schema(
             default: false,
             index: true,
         },
+        isVisible: {
+            type:    Boolean,
+            default: true,
+            index:   true,
+        },
         galeria: [GaleriaItemSchema],
         atributos: [AtributoSchema],
         descricaoLonga: {

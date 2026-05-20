@@ -170,15 +170,17 @@ function renderList(container, dataToRender) {
             : 'assets/placeholder.webp';
 
         return `
-            <div class="p-6 flex items-center justify-between hover:bg-white/[0.02] transition-all group">
+            <div class="p-6 flex items-center justify-between hover:bg-white/[0.02] transition-all group ${p.isVisible === false ? 'opacity-50' : ''}">
                 <div class="flex items-center gap-6">
-                    <div class="w-16 h-16 rounded-lg overflow-hidden border border-white/10 bg-white/5">
+                    <div class="w-16 h-16 rounded-lg overflow-hidden border border-white/10 bg-white/5 relative">
                         <img src="${esc(safeUrl)}" class="w-full h-full object-cover" onerror="this.src='assets/placeholder.webp'">
+                        ${p.isVisible === false ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center"><i data-lucide="eye-off" class="w-4 h-4 text-gray-400"></i></div>' : ''}
                     </div>
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <h5 class="font-serif uppercase tracking-widest text-sm">${esc(p.titulo)}</h5>
                             ${p.isDestaque ? '<span class="text-[9px] bg-gold/20 text-gold px-2 py-0.5 rounded border border-gold/30 uppercase font-bold tracking-tighter">Destaque</span>' : ''}
+                            ${p.isVisible === false ? '<span class="text-[9px] bg-gray-500/20 text-gray-500 px-2 py-0.5 rounded border border-gray-500/30 uppercase font-bold tracking-tighter">Oculto</span>' : ''}
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <p class="text-[10px] text-gray-500 uppercase tracking-tighter">${esc(p.subtitulo)} | ${esc(p.tipo)}</p>
@@ -190,6 +192,11 @@ function renderList(container, dataToRender) {
                 <div class="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onclick="openDocsModal('${esc(p._id)}', '${esc(p.titulo)}')" class="text-blue-400/50 hover:text-blue-400 transition-colors" title="Documentos">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="toggleVisibilidade('${esc(p._id)}')"
+                        class="${p.isVisible === false ? 'text-gray-600 hover:text-gray-400' : 'text-green-400/50 hover:text-green-400'} transition-colors"
+                        title="${p.isVisible === false ? 'Oculto — clique para publicar' : 'Visível — clique para ocultar'}">
+                        <i data-lucide="${p.isVisible === false ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>
                     </button>
                     <button onclick="editItem('${esc(p._id)}')" class="text-gold/50 hover:text-gold transition-colors" title="Editar">
                         <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -205,11 +212,42 @@ function renderList(container, dataToRender) {
 }
 
 function updateStats() {
-    const statTotal = document.getElementById('stat-total');
-    if (statTotal) statTotal.textContent = properties.length;
+    const statTotal   = document.getElementById('stat-total');
+    const statHidden  = document.getElementById('stat-hidden');
+    if (statTotal)  statTotal.textContent  = properties.length;
+    if (statHidden) statHidden.textContent = properties.filter(p => p.isVisible === false).length;
     const highlight     = properties.find(p => p.isDestaque);
     const statHighlight = document.getElementById('stat-highlight');
     if (statHighlight) statHighlight.textContent = highlight ? highlight.titulo : 'Nenhum';
+}
+
+async function toggleVisibilidade(id) {
+    try {
+        const response = await fetch(`${API_URL}/imoveis/${id}/visibilidade`, {
+            method:      'PATCH',
+            credentials: 'include',
+        });
+        if (response.status === 401) { window.location.href = 'login.html'; return; }
+
+        const result = await response.json();
+        if (result.success) {
+            // Atualizar localmente sem refetch
+            const imovel = properties.find(p => p._id === id);
+            if (imovel) imovel.isVisible = result.data.isVisible;
+
+            const msg = result.data.isVisible ? 'Imóvel publicado.' : 'Imóvel ocultado.';
+            showToast(msg, result.data.isVisible ? 'success' : 'info');
+
+            renderList(document.getElementById('property-list'), properties);
+            populateStatusFilter();
+            updateStats();
+            if (window.lucide) lucide.createIcons();
+        } else {
+            showToast(result.error || 'Erro ao alterar visibilidade.', 'error');
+        }
+    } catch {
+        showToast('Falha de conexão.', 'error');
+    }
 }
 
 // =============================================================================
@@ -835,17 +873,18 @@ async function deleteDoc(docId) {
 // 8. ESCOPO GLOBAL
 // =============================================================================
 
-window.editItem        = editItem;
-window.deleteItem      = deleteItem;
-window.openModal       = openModal;
-window.closeModal      = closeModal;
-window.addAttrRow      = addAttrRow;
-window.removePhoto     = removePhoto;
-window.openDocsModal   = openDocsModal;
-window.closeDocsModal  = closeDocsModal;
-window.downloadDoc     = downloadDoc;
-window.deleteDoc       = deleteDoc;
-window.previewDoc      = previewDoc;
-window.closePreviewDoc = closePreviewDoc;
+window.editItem          = editItem;
+window.deleteItem        = deleteItem;
+window.openModal         = openModal;
+window.closeModal        = closeModal;
+window.addAttrRow        = addAttrRow;
+window.removePhoto       = removePhoto;
+window.openDocsModal     = openDocsModal;
+window.closeDocsModal    = closeDocsModal;
+window.downloadDoc       = downloadDoc;
+window.deleteDoc         = deleteDoc;
+window.previewDoc        = previewDoc;
+window.closePreviewDoc   = closePreviewDoc;
+window.toggleVisibilidade = toggleVisibilidade;
 
 document.addEventListener('DOMContentLoaded', init);

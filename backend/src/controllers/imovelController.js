@@ -28,6 +28,7 @@ const imovelSchema = Joi.object({
     }),
     status:         Joi.string().max(100).allow('').default(''),
     finalidade:     Joi.string().max(100).allow('').default(''),
+    isVisible:      Joi.boolean().default(true),
     descricaoLonga: Joi.string().required().messages({
         'any.required': 'A descrição longa é necessária.',
     }),
@@ -107,6 +108,14 @@ exports.getImoveis = async (req, res) => {
         const skip  = (page - 1) * limit;
 
         const filter = {};
+
+        // Rota pública (sem autenticação): só retorna imóveis visíveis
+        // Rota admin (com token): retorna todos para gestão
+        const isAdmin = req.headers.authorization || req.cookies?.token;
+        if (!isAdmin) {
+            filter.isVisible = true;
+        }
+
         if (req.query.tipo && typeof req.query.tipo === 'string' && req.query.tipo.length <= 100) {
             filter.tipo = req.query.tipo.trim();
         }
@@ -253,5 +262,29 @@ exports.setDestaque = async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao definir destaque.' });
     } finally {
         session.endSession();
+    }
+};
+
+// =============================================================================
+// 7. TOGGLE VISIBILIDADE
+// =============================================================================
+exports.toggleVisibilidade = async (req, res) => {
+    try {
+        if (!isValidId(req.params.id)) {
+            return res.status(400).json({ success: false, error: 'ID inválido.' });
+        }
+
+        const imovel = await Imovel.findById(req.params.id);
+        if (!imovel) {
+            return res.status(404).json({ success: false, error: 'Imóvel não encontrado.' });
+        }
+
+        imovel.isVisible = !imovel.isVisible;
+        await imovel.save();
+
+        res.status(200).json({ success: true, data: { isVisible: imovel.isVisible } });
+    } catch (error) {
+        console.error('[toggleVisibilidade]', error.message);
+        res.status(500).json({ success: false, error: 'Erro ao alterar visibilidade.' });
     }
 };
