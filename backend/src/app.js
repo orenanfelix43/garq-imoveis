@@ -11,6 +11,7 @@ const imovelRoutes         = require('./routes/imoveis');
 const documentoRoutes      = require('./routes/documentos');
 const configuracaoRoutes   = require('./routes/configuracoes');
 const usuarioRoutes        = require('./routes/usuarios');
+const clienteRoutes        = require('./routes/clientes');
 const { seedConfiguracoes } = require('./controllers/configuracaoController');
 
 // ─── Origens autorizadas ──────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ app.get('/', (_req, res) => {
 app.use('/api/auth',        express.json({ limit: '10kb' }),  express.urlencoded({ limit: '10kb',  extended: true }), authRoutes);
 app.use('/api/usuarios',    express.json({ limit: '10kb' }),  express.urlencoded({ limit: '10kb',  extended: true }), usuarioRoutes);
 app.use('/api/configuracoes', express.json({ limit: '50kb' }), express.urlencoded({ limit: '50kb', extended: true }), configuracaoRoutes);
+app.use('/api/clientes',    express.json({ limit: '50kb' }),  express.urlencoded({ limit: '50kb',  extended: true }), clienteRoutes);
 
 // Imóveis e documentos: 15mb — recebem imagens/PDFs em base64
 app.use('/api/imoveis',                      express.json({ limit: '15mb' }), express.urlencoded({ limit: '15mb', extended: true }), imovelRoutes);

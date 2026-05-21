@@ -109,12 +109,18 @@ exports.getImoveis = async (req, res) => {
 
         const filter = {};
 
-        // Rota pública (sem autenticação): só retorna imóveis visíveis
-        // Rota admin (com token): retorna todos para gestão
-        const isAdmin = req.headers.authorization || req.cookies?.token;
-        if (!isAdmin) {
-            filter.isVisible = true;
+        // Rota pública: só retorna imóveis visíveis.
+        // Com token válido (painel admin): retorna todos.
+        let isAdmin = false;
+        const token = req.cookies?.token ||
+            (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : null);
+        if (token) {
+            try {
+                require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
+                isAdmin = true;
+            } catch (_) { /* token inválido — tratar como público */ }
         }
+        if (!isAdmin) filter.isVisible = true;
 
         if (req.query.tipo && typeof req.query.tipo === 'string' && req.query.tipo.length <= 100) {
             filter.tipo = req.query.tipo.trim();

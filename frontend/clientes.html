@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes | GARQ Imóveis</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="min-h-screen bg-[#0a0a0a] text-[#fdfdfd] flex flex-col md:flex-row">
+
+<div id="toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+<!-- Sidebar -->
+<aside class="w-full md:w-72 md:h-screen md:sticky md:top-0 glass-panel border-b md:border-b-0 md:border-r border-white/5 flex flex-col z-50">
+    <div class="p-8 border-b border-white/5 flex justify-center items-center">
+        <img src="assets/logo.webp" alt="GARQ Imóveis" class="h-12 w-auto object-contain brightness-110">
+    </div>
+    <div class="p-8 border-b border-white/5 bg-white/[0.02]">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center text-gold">
+                <i data-lucide="user" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h4 id="user-name-display" class="text-sm font-bold uppercase tracking-tight">Seu Nome</h4>
+                <p id="user-role-display" class="text-[10px] text-gold uppercase tracking-[0.2em] font-medium">Seu Cargo</p>
+            </div>
+        </div>
+    </div>
+    <nav class="flex-1 p-6 space-y-2">
+        <p class="text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-4 ml-2">Menu Principal</p>
+        <a href="admin.html" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span class="text-xs uppercase tracking-widest">Imóveis</span>
+        </a>
+        <a href="clientes.html" class="flex items-center gap-3 p-3 rounded-lg bg-gold/10 text-gold border border-gold/20 transition-all">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            <span class="text-xs uppercase tracking-widest font-semibold">Clientes</span>
+        </a>
+        <a href="configuracoes.html" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
+            <i data-lucide="settings-2" class="w-4 h-4"></i>
+            <span class="text-xs uppercase tracking-widest">Configurações</span>
+        </a>
+        <a href="index.html" class="flex items-center gap-3 p-3 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-all group">
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+            <span class="text-xs uppercase tracking-widest">Voltar para o Site</span>
+        </a>
+    </nav>
+    <div class="p-6 border-t border-white/5">
+        <button id="logout-btn" class="w-full flex items-center gap-3 p-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-all">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span class="text-xs uppercase tracking-widest">Sair do Painel</span>
+        </button>
+    </div>
+</aside>
+
+<!-- Main -->
+<main class="flex-1 p-6 md:p-12 max-w-6xl mx-auto w-full">
+
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div>
+            <p class="text-gold text-[10px] uppercase tracking-[0.4em] mb-2">Painel Administrativo</p>
+            <h2 class="text-3xl font-serif uppercase tracking-tight">Clientes</h2>
+        </div>
+        <button onclick="abrirModalCliente()" class="btn-primary flex items-center gap-2">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Novo Cliente
+        </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+        <div class="glass-panel p-6 rounded-xl border-b-2 border-b-transparent hover:border-b-gold transition-all">
+            <p class="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Total de Clientes</p>
+            <h3 class="text-3xl font-serif text-gold" id="stat-clientes">0</h3>
+        </div>
+        <div class="glass-panel p-6 rounded-xl">
+            <p class="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Com Imóvel Vinculado</p>
+            <h3 class="text-3xl font-serif text-white" id="stat-vinculados">0</h3>
+        </div>
+        <div class="glass-panel p-6 rounded-xl">
+            <p class="text-gray-400 text-[10px] uppercase tracking-widest mb-1">Proprietários</p>
+            <h3 class="text-3xl font-serif text-white" id="stat-proprietarios">0</h3>
+        </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl">
+        <div class="p-6 border-b border-white/5 bg-white/[0.02] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h4 class="font-serif text-sm uppercase tracking-widest">Lista de Clientes</h4>
+            <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500"></i>
+                <input type="text" id="search-clientes"
+                    class="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-9 pr-4 text-[10px] uppercase tracking-widest focus:border-gold/50 outline-none transition-all"
+                    placeholder="Buscar cliente...">
+            </div>
+        </div>
+        <div id="clientes-list" class="divide-y divide-white/5">
+            <div class="p-20 text-center">
+                <i data-lucide="loader" class="w-6 h-6 text-gray-600 mx-auto animate-spin"></i>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- ═══════════════════ MODAL CLIENTE (criar/editar) ═══════════════════ -->
+<div id="modal-cliente" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-[100] items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border-gold/20 max-h-[90vh] flex flex-col">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02] flex-shrink-0">
+            <h3 id="modal-cliente-title" class="font-serif text-lg uppercase tracking-widest text-gold">Novo Cliente</h3>
+            <button onclick="fecharModalCliente()" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
+        </div>
+        <div class="p-6 space-y-4 overflow-y-auto">
+            <input type="hidden" id="cliente-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Nome *</label>
+                    <input type="text" id="cliente-nome" class="input-field" placeholder="Nome completo">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Telefone *</label>
+                    <input type="text" id="cliente-telefone" class="input-field" placeholder="(11) 99999-9999">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">E-mail</label>
+                <input type="email" id="cliente-email" class="input-field" placeholder="email@exemplo.com">
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Notas / Observações</label>
+                <textarea id="cliente-notas" class="input-field resize-none h-24" placeholder="Anotações sobre o cliente..."></textarea>
+            </div>
+            <div id="cliente-erro" class="hidden text-[10px] text-red-400 uppercase tracking-widest"></div>
+            <div class="flex justify-end gap-4 pt-2">
+                <button onclick="fecharModalCliente()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
+                <button onclick="salvarCliente()" class="btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL DETALHE DO CLIENTE ═══════════════════ -->
+<div id="modal-detalhe" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-[100] items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border-gold/20 max-h-[90vh] flex flex-col">
+
+        <!-- Header -->
+        <div class="p-6 border-b border-white/10 bg-white/[0.02] flex justify-between items-center flex-shrink-0">
+            <div>
+                <h3 id="detalhe-nome" class="font-serif text-xl uppercase tracking-widest text-white">—</h3>
+                <p id="detalhe-contato" class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">—</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="editarClienteAtual()" class="p-2 rounded-lg text-gold/50 hover:text-gold hover:bg-white/5 transition-all" title="Editar">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="fecharModalDetalhe()" class="text-gray-400 hover:text-white transition">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+
+            <!-- Notas -->
+            <div id="detalhe-notas-section" class="hidden p-6 border-b border-white/5 bg-white/[0.01]">
+                <p class="text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-2">Observações</p>
+                <p id="detalhe-notas" class="text-xs text-gray-300 leading-relaxed"></p>
+            </div>
+
+            <!-- Imóveis vinculados -->
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-[9px] uppercase tracking-[0.3em] text-gray-500">Imóveis Vinculados</p>
+                    <button onclick="abrirModalVinculo()" class="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Vincular Imóvel
+                    </button>
+                </div>
+                <div id="detalhe-vinculos" class="space-y-2">
+                    <p class="text-[10px] text-gray-600 uppercase tracking-widest text-center py-6">Nenhum imóvel vinculado</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════ MODAL VINCULAR IMÓVEL ═══════════════════ -->
+<div id="modal-vinculo" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-[110] items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-gold/20">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+            <h3 class="font-serif text-lg uppercase tracking-widest text-gold">Vincular Imóvel</h3>
+            <button onclick="fecharModalVinculo()" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Imóvel</label>
+                <select id="vinculo-imovel" class="input-field appearance-none">
+                    <option value="">— Selecione um imóvel —</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-3">Tipo de Vínculo</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition-all has-[:checked]:border-gold/40 has-[:checked]:bg-gold/5">
+                        <input type="radio" name="vinculo-tipo" value="interessado" checked class="accent-gold">
+                        <div>
+                            <p class="text-xs font-medium text-white uppercase tracking-widest">Interessado</p>
+                            <p class="text-[9px] text-gray-500 mt-0.5">Quer comprar/alugar</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/[0.02] cursor-pointer hover:border-white/20 transition-all has-[:checked]:border-gold/40 has-[:checked]:bg-gold/5">
+                        <input type="radio" name="vinculo-tipo" value="proprietario" class="accent-gold">
+                        <div>
+                            <p class="text-xs font-medium text-gold uppercase tracking-widest">Proprietário</p>
+                            <p class="text-[9px] text-gray-500 mt-0.5">Dono do imóvel</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] uppercase tracking-widest text-gray-400 mb-2">Observação (opcional)</label>
+                <input type="text" id="vinculo-obs" class="input-field" placeholder="Ex: Visitou em janeiro, aguarda proposta">
+            </div>
+            <div id="vinculo-erro" class="hidden text-[10px] text-red-400 uppercase tracking-widest"></div>
+            <div class="flex justify-end gap-4 pt-2">
+                <button onclick="fecharModalVinculo()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
+                <button onclick="confirmarVinculo()" class="btn-primary">Vincular</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuração global -->
+<script>
+    window.__GARQ_CONFIG__ = {
+        API_URL: ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://localhost:5000/api'
+            : 'https://garq-imoveis.onrender.com/api'
+    };
+</script>
+<script type="module" src="src/clientes.js"></script>
+</body>
+</html>

@@ -99,6 +99,14 @@
             if (window.lucide) window.lucide.createIcons();
         });
     </script>
+    <!-- Configuração global -->
+    <script>
+        window.__GARQ_CONFIG__ = {
+            API_URL: ['localhost', '127.0.0.1'].includes(window.location.hostname)
+                ? 'http://localhost:5000/api'
+                : 'https://garq-imoveis.onrender.com/api'
+        };
+    </script>
     <script type="module" src="src/login-handler.js"></script>
 </body>
 
