@@ -58,6 +58,16 @@ function setupSearch() {
 // FETCH
 // =============================================================================
 async function fetchClientes() {
+    const container = document.getElementById('clientes-list');
+    if (container) {
+        container.innerHTML = `
+            <div class="p-20 text-center flex flex-col items-center gap-3">
+                <i data-lucide="loader" class="w-6 h-6 text-gray-600 animate-spin"></i>
+                <p class="text-[9px] text-gray-600 uppercase tracking-widest">Conectando ao servidor...</p>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+    }
+
     try {
         const res = await fetch(`${API_URL}/clientes`, { credentials: 'include' });
         if (res.status === 401) { window.location.href = 'login.html'; return; }
@@ -67,8 +77,19 @@ async function fetchClientes() {
             renderClientes(clientes);
             updateStats();
         }
-    } catch {
-        showToast('Falha ao carregar clientes.', 'error');
+    } catch (err) {
+        // Erro de rede (timeout, servidor acordando) — não redireciona para login
+        if (container) {
+            container.innerHTML = `
+                <div class="p-16 text-center flex flex-col items-center gap-4">
+                    <i data-lucide="wifi-off" class="w-8 h-8 text-gray-700"></i>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest">Falha de conexão</p>
+                    <button onclick="fetchClientes()" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
+                        Tentar novamente
+                    </button>
+                </div>`;
+            if (window.lucide) lucide.createIcons();
+        }
     }
 }
 
@@ -458,5 +479,6 @@ window.abrirModalVinculo   = abrirModalVinculo;
 window.fecharModalVinculo  = fecharModalVinculo;
 window.confirmarVinculo    = confirmarVinculo;
 window.removerVinculo      = removerVinculo;
+window.fetchClientes       = fetchClientes;
 
 document.addEventListener('DOMContentLoaded', init);

@@ -6,7 +6,7 @@ const STORAGE_KEYS = {
     ROLE:     'userRole',
 };
 
-const REQUEST_TIMEOUT_MS = 10_000;
+const REQUEST_TIMEOUT_MS = 30_000; // 30s — cobre cold start do Render free tier
 
 // ─── Helper: fetch com timeout ────────────────────────────────────────────────
 async function fetchWithTimeout(url, options = {}) {

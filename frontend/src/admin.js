@@ -126,10 +126,17 @@ function loadUserDisplay() {
 
 async function fetchProperties() {
     const propertyList = document.getElementById('property-list');
+    if (propertyList) {
+        propertyList.innerHTML = `
+            <div class="p-20 text-center flex flex-col items-center gap-3">
+                <i data-lucide="loader" class="w-6 h-6 text-gray-600 animate-spin"></i>
+                <p class="text-[9px] text-gray-600 uppercase tracking-widest">Conectando ao servidor...</p>
+            </div>`;
+        if (window.lucide) lucide.createIcons();
+    }
+
     try {
-        const response = await fetch(`${API_URL}/imoveis`, {
-            credentials: 'include',
-        });
+        const response = await fetch(`${API_URL}/imoveis`, { credentials: 'include' });
 
         if (response.status === 401) {
             window.location.href = 'login.html';
@@ -146,8 +153,19 @@ async function fetchProperties() {
             showToast('Erro ao carregar inventário.', 'error');
         }
     } catch (error) {
+        // Erro de rede — não redireciona para login
         console.error('Erro ao carregar inventário:', error);
-        showToast('Falha de conexão com o servidor.', 'error');
+        if (propertyList) {
+            propertyList.innerHTML = `
+                <div class="p-16 text-center flex flex-col items-center gap-4">
+                    <i data-lucide="wifi-off" class="w-8 h-8 text-gray-700"></i>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest">Falha de conexão</p>
+                    <button onclick="fetchProperties()" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
+                        Tentar novamente
+                    </button>
+                </div>`;
+            if (window.lucide) lucide.createIcons();
+        }
     }
 }
 
@@ -873,18 +891,19 @@ async function deleteDoc(docId) {
 // 8. ESCOPO GLOBAL
 // =============================================================================
 
-window.editItem          = editItem;
-window.deleteItem        = deleteItem;
-window.openModal         = openModal;
-window.closeModal        = closeModal;
-window.addAttrRow        = addAttrRow;
-window.removePhoto       = removePhoto;
-window.openDocsModal     = openDocsModal;
-window.closeDocsModal    = closeDocsModal;
-window.downloadDoc       = downloadDoc;
-window.deleteDoc         = deleteDoc;
-window.previewDoc        = previewDoc;
-window.closePreviewDoc   = closePreviewDoc;
+window.editItem           = editItem;
+window.deleteItem         = deleteItem;
+window.openModal          = openModal;
+window.closeModal         = closeModal;
+window.addAttrRow         = addAttrRow;
+window.removePhoto        = removePhoto;
+window.openDocsModal      = openDocsModal;
+window.closeDocsModal     = closeDocsModal;
+window.downloadDoc        = downloadDoc;
+window.deleteDoc          = deleteDoc;
+window.previewDoc         = previewDoc;
+window.closePreviewDoc    = closePreviewDoc;
 window.toggleVisibilidade = toggleVisibilidade;
+window.fetchProperties    = fetchProperties;
 
 document.addEventListener('DOMContentLoaded', init);
