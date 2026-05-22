@@ -1,5 +1,6 @@
 import { API_URL } from './config.js';
 import { esc, showToast, showConfirm } from './ui-helpers.js';
+import { apiFetch } from './api-fetch.js';
 
 let tempPhotos = [];
 let tempAttrs  = [];
@@ -46,7 +47,7 @@ async function loadSelects() {
     // Carrega os selects do formulário de imóvel
     await Promise.all(chaves.map(async (chave) => {
         try {
-            const res    = await fetch(`${API_URL}/configuracoes/chave/${chave}`);
+            const res    = await apiFetch(`${API_URL}/configuracoes/chave/${chave}`);
             const result = await res.json();
             if (!result.success) return;
 
@@ -63,7 +64,7 @@ async function loadSelects() {
 
     // Carrega rótulos de atributos para uso no createRowElement
     try {
-        const res    = await fetch(`${API_URL}/configuracoes/chave/rotulos_atributos`);
+        const res    = await apiFetch(`${API_URL}/configuracoes/chave/rotulos_atributos`);
         const result = await res.json();
         if (result.success) {
             rotulosAtributos = result.data.itens.filter(i => i.ativo);
@@ -136,7 +137,7 @@ async function fetchProperties() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/imoveis`, { credentials: 'include' });
+        const response = await apiFetch(`${API_URL}/imoveis`, { credentials: 'include' });
 
         if (response.status === 401) {
             window.location.href = 'login.html';
@@ -241,7 +242,7 @@ function updateStats() {
 
 async function toggleVisibilidade(id) {
     try {
-        const response = await fetch(`${API_URL}/imoveis/${id}/visibilidade`, {
+        const response = await apiFetch(`${API_URL}/imoveis/${id}/visibilidade`, {
             method:      'PATCH',
             credentials: 'include',
         });
@@ -274,7 +275,7 @@ async function toggleVisibilidade(id) {
 
 async function editItem(id) {
     try {
-        const response = await fetch(`${API_URL}/imoveis/${id}`, {
+        const response = await apiFetch(`${API_URL}/imoveis/${id}`, {
             credentials: 'include',
         });
         if (!response.ok) {
@@ -314,7 +315,7 @@ async function deleteItem(id) {
     if (!confirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/imoveis/${id}`, {
+        const response = await apiFetch(`${API_URL}/imoveis/${id}`, {
             method:      'DELETE',
             credentials: 'include',
         });
@@ -522,7 +523,7 @@ function setupLogout() {
         if (!confirmed) return;
 
         try {
-            await fetch(`${API_URL}/auth/logout`, {
+            await apiFetch(`${API_URL}/auth/logout`, {
                 method:      'POST',
                 credentials: 'include',
             });
@@ -618,7 +619,7 @@ async function handleDocsFileSelect(files) {
         progressBar.style.width   = '75%';
         progressLabel.textContent = 'Enviando...';
 
-        const response = await fetch(`${API_URL}/imoveis/${currentDocsImovelId}/documentos`, {
+        const response = await apiFetch(`${API_URL}/imoveis/${currentDocsImovelId}/documentos`, {
             method:      'POST',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -676,7 +677,7 @@ async function fetchDocumentos() {
     if (window.lucide) lucide.createIcons();
 
     try {
-        const response = await fetch(`${API_URL}/imoveis/${currentDocsImovelId}/documentos`, {
+        const response = await apiFetch(`${API_URL}/imoveis/${currentDocsImovelId}/documentos`, {
             credentials: 'include',
         });
 
@@ -869,7 +870,7 @@ async function deleteDoc(docId) {
     if (!confirmed) return;
 
     try {
-        const response = await fetch(`${API_URL}/imoveis/${currentDocsImovelId}/documentos/${docId}`, {
+        const response = await apiFetch(`${API_URL}/imoveis/${currentDocsImovelId}/documentos/${docId}`, {
             method:      'DELETE',
             credentials: 'include',
         });

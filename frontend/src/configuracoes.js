@@ -1,5 +1,6 @@
 import { API_URL } from './config.js';
 import { esc, showToast, showConfirm } from './ui-helpers.js';
+import { apiFetch } from './api-fetch.js';
 
 let configs       = [];
 let configAtualId = null; // id da lista aberta no modal de novo item
@@ -41,7 +42,7 @@ function setupLogout() {
     btn.onclick = async () => {
         const ok = await showConfirm('Deseja realmente sair do painel?');
         if (!ok) return;
-        try { await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
+        try { await apiFetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
         localStorage.clear();
         window.location.href = 'login.html';
     };
@@ -54,7 +55,7 @@ function setupLogout() {
 async function fetchConfigs() {
     const container = document.getElementById('listas-container');
     try {
-        const response = await fetch(`${API_URL}/configuracoes`, { credentials: 'include' });
+        const response = await apiFetch(`${API_URL}/configuracoes`, { credentials: 'include' });
         if (response.status === 401) { window.location.href = 'login.html'; return; }
         const result = await response.json();
         if (result.success) {
@@ -169,7 +170,7 @@ async function criarLista() {
     if (!titulo) { showToast('Informe o título da lista.', 'error'); return; }
 
     try {
-        const response = await fetch(`${API_URL}/configuracoes`, {
+        const response = await apiFetch(`${API_URL}/configuracoes`, {
             method:      'POST',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -193,7 +194,7 @@ async function deletarLista(id, titulo) {
     const ok = await showConfirm(`Excluir a lista "${titulo}" permanentemente?`);
     if (!ok) return;
     try {
-        const response = await fetch(`${API_URL}/configuracoes/${id}`, {
+        const response = await apiFetch(`${API_URL}/configuracoes/${id}`, {
             method: 'DELETE', credentials: 'include',
         });
         if (response.status === 401) { window.location.href = 'login.html'; return; }
@@ -243,7 +244,7 @@ async function adicionarItem() {
     if (!configAtualId) return;
 
     try {
-        const response = await fetch(`${API_URL}/configuracoes/${configAtualId}/itens`, {
+        const response = await apiFetch(`${API_URL}/configuracoes/${configAtualId}/itens`, {
             method:      'POST',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -271,7 +272,7 @@ async function salvarLabelInline(event, configId, itemId) {
     const novoLabel = event.target.textContent.trim();
     if (!novoLabel) return;
     try {
-        const response = await fetch(`${API_URL}/configuracoes/${configId}/itens/${itemId}`, {
+        const response = await apiFetch(`${API_URL}/configuracoes/${configId}/itens/${itemId}`, {
             method:      'PATCH',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -288,7 +289,7 @@ async function salvarLabelInline(event, configId, itemId) {
 
 async function toggleItem(configId, itemId, novoAtivo) {
     try {
-        const response = await fetch(`${API_URL}/configuracoes/${configId}/itens/${itemId}`, {
+        const response = await apiFetch(`${API_URL}/configuracoes/${configId}/itens/${itemId}`, {
             method:      'PATCH',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -311,7 +312,7 @@ async function removerItem(configId, itemId) {
     const ok = await showConfirm('Remover este item da lista?');
     if (!ok) return;
     try {
-        const response = await fetch(`${API_URL}/configuracoes/${configId}/itens/${itemId}`, {
+        const response = await apiFetch(`${API_URL}/configuracoes/${configId}/itens/${itemId}`, {
             method: 'DELETE', credentials: 'include',
         });
         if (response.status === 401) { window.location.href = 'login.html'; return; }
@@ -336,7 +337,7 @@ async function fetchUsuarios() {
     if (!container) return;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios`, { credentials: 'include' });
+        const response = await apiFetch(`${API_URL}/usuarios`, { credentials: 'include' });
         if (response.status === 401) { window.location.href = 'login.html'; return; }
         if (response.status === 403) {
             container.innerHTML = `<p class="text-[10px] text-gray-600 uppercase tracking-widest text-center p-8">Acesso restrito a administradores.</p>`;
@@ -429,7 +430,7 @@ async function criarUsuario() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/auth/register`, {
+        const response = await apiFetch(`${API_URL}/auth/register`, {
             method:      'POST',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -457,7 +458,7 @@ async function removerUsuario(id, nome) {
     if (!ok) return;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+        const response = await apiFetch(`${API_URL}/usuarios/${id}`, {
             method: 'DELETE', credentials: 'include',
         });
         if (response.status === 401) { window.location.href = 'login.html'; return; }
@@ -484,7 +485,7 @@ async function alterarRole(id, roleAtual) {
     if (!ok) return;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/${id}/role`, {
+        const response = await apiFetch(`${API_URL}/usuarios/${id}/role`, {
             method:      'PATCH',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',

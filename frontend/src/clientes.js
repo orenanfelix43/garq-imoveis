@@ -1,5 +1,6 @@
 import { API_URL } from './config.js';
 import { esc, showToast, showConfirm } from './ui-helpers.js';
+import { apiFetch } from './api-fetch.js';
 
 // =============================================================================
 // ESTADO
@@ -34,7 +35,7 @@ function setupLogout() {
     btn.onclick = async () => {
         const ok = await showConfirm('Deseja realmente sair do painel?');
         if (!ok) return;
-        try { await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
+        try { await apiFetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
         localStorage.clear();
         window.location.href = 'login.html';
     };
@@ -69,7 +70,7 @@ async function fetchClientes() {
     }
 
     try {
-        const res = await fetch(`${API_URL}/clientes`, { credentials: 'include' });
+        const res = await apiFetch(`${API_URL}/clientes`, { credentials: 'include' });
         if (res.status === 401) { window.location.href = 'login.html'; return; }
         const result = await res.json();
         if (result.success) {
@@ -96,7 +97,7 @@ async function fetchClientes() {
 async function fetchImoveis() {
     try {
         // Busca com token — retorna todos incluindo ocultos
-        const res = await fetch(`${API_URL}/imoveis?limit=200`, { credentials: 'include' });
+        const res = await apiFetch(`${API_URL}/imoveis?limit=200`, { credentials: 'include' });
         const result = await res.json();
         if (result.success) imoveis = result.data;
     } catch (_) {}
@@ -253,7 +254,7 @@ async function excluirCliente(id, nome) {
     if (!ok) return;
 
     try {
-        const res = await fetch(`${API_URL}/clientes/${id}`, { method: 'DELETE', credentials: 'include' });
+        const res = await apiFetch(`${API_URL}/clientes/${id}`, { method: 'DELETE', credentials: 'include' });
         if (res.status === 401) { window.location.href = 'login.html'; return; }
         const result = await res.json();
         if (result.success) {
@@ -272,7 +273,7 @@ async function excluirCliente(id, nome) {
 // =============================================================================
 async function abrirDetalhe(id) {
     try {
-        const res = await fetch(`${API_URL}/clientes/${id}`, { credentials: 'include' });
+        const res = await apiFetch(`${API_URL}/clientes/${id}`, { credentials: 'include' });
         if (res.status === 401) { window.location.href = 'login.html'; return; }
 
         const result = await res.json();
@@ -409,7 +410,7 @@ async function confirmarVinculo() {
     }
 
     try {
-        const res = await fetch(`${API_URL}/clientes/${clienteAtual._id}/vinculos`, {
+        const res = await apiFetch(`${API_URL}/clientes/${clienteAtual._id}/vinculos`, {
             method:      'POST',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -443,7 +444,7 @@ async function removerVinculo(vinculoId) {
     if (!ok) return;
 
     try {
-        const res = await fetch(`${API_URL}/clientes/${clienteAtual._id}/vinculos/${vinculoId}`, {
+        const res = await apiFetch(`${API_URL}/clientes/${clienteAtual._id}/vinculos/${vinculoId}`, {
             method: 'DELETE', credentials: 'include',
         });
         if (res.status === 401) { window.location.href = 'login.html'; return; }

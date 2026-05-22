@@ -116,6 +116,7 @@ exports.login = async (req, res) => {
 
         return res.status(200).json({
             success: true,
+            token,   // retornado para mobile — cookie pode ser bloqueado por ITP
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
 
