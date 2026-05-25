@@ -3,12 +3,20 @@ const jwt      = require('jsonwebtoken');
 const crypto   = require('crypto');
 const nodemailer = require('nodemailer');
 
+// Transporter criado uma vez — conexão SMTP reutilizada entre chamadas
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    pool:             true,  // reutiliza conexões — mais rápido
+    maxConnections:   1,
+    rateDelta:        1000,
+    rateLimit:        5,
+    connectionTimeout: 10_000, // 10s para conectar
+    greetingTimeout:   10_000,
+    socketTimeout:     15_000, // 15s para enviar
 });
 
 const signToken = (userId, role) =>
