@@ -1,14 +1,13 @@
-// Única fonte de verdade: window.__GARQ_CONFIG__ definido no HTML de cada página.
-// Fallback para desenvolvimento sem o script inline.
+// Em produção: usa /api relativo (proxy Vercel → Render)
+// Mesmo domínio = Safari ITP não bloqueia cookies nem localStorage
+// Em dev local: usa localhost diretamente
 const _isDev = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 export const config = {
     isDev:  _isDev,
-    apiUrl: window.__GARQ_CONFIG__?.API_URL ?? (
-        _isDev
-            ? 'http://localhost:5000/api'
-            : 'https://garq-imoveis.onrender.com/api'
-    ),
+    apiUrl: _isDev
+        ? 'http://localhost:5000/api'
+        : '/api',
 };
 
 export const API_URL = config.apiUrl;

@@ -21,17 +21,18 @@ const signToken = (userId, role) =>
 // ─── Opções do cookie de sessão ───────────────────────────────────────────────
 const cookieOptions = () => ({
     httpOnly: true,
-    secure:   true,
-    sameSite: 'none',
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
     maxAge:   7 * 24 * 60 * 60 * 1000,
+    path:     '/',
 });
 
-// ─── Opções do cookie de limpeza (logout) ─────────────────────────────────────
 const cookieClearOptions = () => ({
     httpOnly: true,
-    secure:   true,
-    sameSite: 'none',
-    expires:  new Date(0), // força expiração imediata
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+    expires:  new Date(0),
+    path:     '/',
 });
 
 // =============================================================================

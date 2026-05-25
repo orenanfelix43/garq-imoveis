@@ -1,7 +1,9 @@
 const baseUrl = "https://pub-c3e6ea3b19da44d7b869d5d7b4eaf09b.r2.dev";
 
-// API_URL definida em index.html via window.__GARQ_CONFIG__ — única fonte de verdade
-const API_URL = window.__GARQ_CONFIG__?.API_URL ?? 'https://garq-imoveis.onrender.com/api';
+// API_URL: /api relativo em produção (proxy Vercel), localhost em dev
+const API_URL = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:5000/api'
+    : '/api';
 
 const categoryVideos = {
     'todos': `${baseUrl}/Todos.mp4`,
