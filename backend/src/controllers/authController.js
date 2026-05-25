@@ -5,18 +5,19 @@ const nodemailer = require('nodemailer');
 
 // Transporter criado uma vez — conexão SMTP reutilizada entre chamadas
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host:   'smtp.gmail.com', // host explícito em vez de 'service: gmail' — permite forçar IPv4
+    port:   587,
+    secure: false,            // STARTTLS na porta 587
+    family: 4,                // forçar IPv4 — Render free tier não suporta IPv6
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
-    pool:             true,  // reutiliza conexões — mais rápido
-    maxConnections:   1,
-    rateDelta:        1000,
-    rateLimit:        5,
-    connectionTimeout: 10_000, // 10s para conectar
+    pool:              true,
+    maxConnections:    1,
+    connectionTimeout: 10_000,
     greetingTimeout:   10_000,
-    socketTimeout:     15_000, // 15s para enviar
+    socketTimeout:     15_000,
 });
 
 const signToken = (userId, role) =>
