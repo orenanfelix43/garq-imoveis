@@ -1,24 +1,11 @@
 const User     = require('../models/User');
 const jwt      = require('jsonwebtoken');
 const crypto   = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Transporter criado uma vez — conexão SMTP reutilizada entre chamadas
-const transporter = nodemailer.createTransport({
-    host:   'smtp.gmail.com', // host explícito em vez de 'service: gmail' — permite forçar IPv4
-    port:   587,
-    secure: false,            // STARTTLS na porta 587
-    family: 4,                // forçar IPv4 — Render free tier não suporta IPv6
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-    pool:              true,
-    maxConnections:    1,
-    connectionTimeout: 10_000,
-    greetingTimeout:   10_000,
-    socketTimeout:     15_000,
-});
+// Resend — API HTTP, funciona em qualquer hosting (Render, Vercel, etc.)
+// SMTP é bloqueado pelo Render free tier; Resend usa HTTP que não é bloqueado
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const signToken = (userId, role) =>
     jwt.sign(
@@ -175,8 +162,8 @@ exports.forgotPassword = async (req, res) => {
         const resetUrl = `${baseUrl}/redefinir-senha.html?token=${rawToken}`;
 
         try {
-            await transporter.sendMail({
-                from:    process.env.EMAIL_USER,
+            await resend.emails.send({
+                from:    'GARQ Imóveis <noreply@garqimoveis.com.br>',
                 to:      user.email,
                 subject: 'Recuperação de Senha | GARQ Suporte',
                 html: `
