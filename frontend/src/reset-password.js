@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.innerText   = 'ATUALIZANDO...';
 
         const controller = new AbortController();
-        const timeoutId  = setTimeout(() => controller.abort(), 10_000);
+        const timeoutId  = setTimeout(() => controller.abort(), 30_000);
 
         try {
             const response = await fetch(`${API_URL}/auth/reset-password`, {
