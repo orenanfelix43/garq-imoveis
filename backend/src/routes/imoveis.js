@@ -4,6 +4,7 @@ const router  = express.Router();
 const {
     criarImovel,
     getImoveis,
+    getImoveisAdmin,
     getImovel,
     atualizarImovel,
     deletarImovel,
@@ -14,10 +15,11 @@ const {
 const { protect, authorize } = require('../middleware/auth');
 
 // ─── Rotas públicas ───────────────────────────────────────────────────────────
-router.get('/',    getImoveis);
-router.get('/:id', getImovel);
+router.get('/',        getImoveis);      // filtra isVisible: true sempre
+router.get('/:id',     getImovel);
 
 // ─── Rotas protegidas ─────────────────────────────────────────────────────────
+router.get('/admin/todos', protect, getImoveisAdmin); // retorna todos incluindo ocultos
 router.post('/',    protect,                    criarImovel);
 router.put('/:id',  protect,                    atualizarImovel);
 router.delete('/:id', protect, authorize('admin'), deletarImovel);

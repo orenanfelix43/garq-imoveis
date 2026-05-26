@@ -137,7 +137,7 @@ async function fetchProperties() {
     }
 
     try {
-        const response = await apiFetch(`${API_URL}/imoveis`, { credentials: 'include' });
+        const response = await apiFetch(`${API_URL}/imoveis/admin/todos`, { credentials: 'include' });
 
         if (response.status === 401) {
             window.location.href = 'login.html';

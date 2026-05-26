@@ -109,18 +109,9 @@ exports.getImoveis = async (req, res) => {
 
         const filter = {};
 
-        // Rota pública: só retorna imóveis visíveis.
-        // Com token válido (painel admin): retorna todos.
-        let isAdmin = false;
-        const token = req.cookies?.token ||
-            (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : null);
-        if (token) {
-            try {
-                require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
-                isAdmin = true;
-            } catch (_) { /* token inválido — tratar como público */ }
-        }
-        if (!isAdmin) filter.isVisible = true;
+        // Rota pública: sempre filtra imóveis visíveis — sem exceção
+        // O painel admin usa GET /api/imoveis/admin que não filtra visibilidade
+        filter.isVisible = true;
 
         if (req.query.tipo && typeof req.query.tipo === 'string' && req.query.tipo.length <= 100) {
             filter.tipo = req.query.tipo.trim();
@@ -144,7 +135,38 @@ exports.getImoveis = async (req, res) => {
 };
 
 // =============================================================================
-// 3. READ — Listar Um
+// 3. READ — Listar Todos (ADMIN) — inclui ocultos
+// =============================================================================
+exports.getImoveisAdmin = async (req, res) => {
+    try {
+        const page  = Math.max(1, parseInt(req.query.page)  || 1);
+        const limit = Math.min(50, parseInt(req.query.limit) || 20);
+        const skip  = (page - 1) * limit;
+
+        const filter = {};
+        if (req.query.tipo && typeof req.query.tipo === 'string' && req.query.tipo.length <= 100) {
+            filter.tipo = req.query.tipo.trim();
+        }
+
+        const [imoveis, total] = await Promise.all([
+            Imovel.find(filter).skip(skip).limit(limit).lean(),
+            Imovel.countDocuments(filter),
+        ]);
+
+        res.status(200).json({
+            success: true,
+            total,
+            page,
+            pages: Math.ceil(total / limit),
+            data:  imoveis,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Erro ao buscar imóveis.' });
+    }
+};
+
+// =============================================================================
+// 4. READ — Listar Um
 // =============================================================================
 exports.getImovel = async (req, res) => {
     try {

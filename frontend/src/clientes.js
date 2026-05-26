@@ -97,7 +97,7 @@ async function fetchClientes() {
 async function fetchImoveis() {
     try {
         // Busca com token — retorna todos incluindo ocultos
-        const res = await apiFetch(`${API_URL}/imoveis?limit=200`, { credentials: 'include' });
+        const res = await apiFetch(`${API_URL}/imoveis/admin/todos?limit=200`, { credentials: 'include' });
         const result = await res.json();
         if (result.success) imoveis = result.data;
     } catch (_) {}
