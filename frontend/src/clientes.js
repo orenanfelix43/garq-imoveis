@@ -154,18 +154,8 @@ function renderClientes(data) {
             <div class="flex items-center gap-3 flex-shrink-0">
                 ${qtdImoveis > 0 ? `
                     <span class="text-[8px] uppercase tracking-widest font-bold px-2 py-1 rounded border ${temPropr ? 'border-gold/30 bg-gold/10 text-gold' : 'border-white/10 bg-white/5 text-gray-400'}">
-                        ${qtdImoveis} imóvel${qtdImoveis > 1 ? 'is' : ''}
+                        ${qtdImoveis} imóvel${qtdImoveis > 1 ? 's' : ''}
                     </span>` : ''}
-                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onclick="event.stopPropagation(); abrirModalCliente('${esc(c._id)}')"
-                        class="p-1.5 rounded text-gold/40 hover:text-gold hover:bg-white/5 transition-all" title="Editar">
-                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                    </button>
-                    <button onclick="event.stopPropagation(); excluirCliente('${esc(c._id)}', '${esc(c.nome)}')"
-                        class="p-1.5 rounded text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all" title="Excluir">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                    </button>
-                </div>
             </div>
         </div>
         `;

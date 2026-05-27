@@ -43,8 +43,13 @@ const resetLimiter = rateLimit({
 
 // ─── Rotas ────────────────────────────────────────────────────────────────────
 
-// Registro protegido: apenas admin autenticado pode criar novos usuários
-router.post('/register',        protect, authorize('admin'), register);
+// Registro: admin autenticado pode criar qualquer role
+// Auto-cadastro público: só permite role 'cliente'
+router.post('/register', (req, res, next) => {
+    const role = req.body?.role;
+    if (role === 'cliente') return next(); // auto-cadastro público
+    return protect(req, res, () => authorize('admin')(req, res, next));
+}, register);
 
 router.post('/login',           loginLimiter, login);
 router.post('/logout',          logout);

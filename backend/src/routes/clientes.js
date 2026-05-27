@@ -9,21 +9,32 @@ const {
     deletarCliente,
     adicionarVinculo,
     removerVinculo,
+    getMinhaArea,
+    adicionarComentario,
+    removerComentario,
 } = require('../controllers/clienteController');
 
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
 // Todas protegidas
 router.use(protect);
 
-router.get('/',    listarClientes);
-router.get('/:id', getCliente);
-router.post('/',   criarCliente);
-router.put('/:id', atualizarCliente);
-router.delete('/:id', deletarCliente);
+// Área do cliente — acesso pelo próprio cliente
+router.get('/minha-area', getMinhaArea);
 
-// Vínculos com imóveis
-router.post('/:id/vinculos',                adicionarVinculo);
-router.delete('/:id/vinculos/:vinculoId',   removerVinculo);
+// Admin — gestão de clientes
+router.get('/',    authorize('admin'), listarClientes);
+router.get('/:id', authorize('admin'), getCliente);
+router.post('/',   authorize('admin'), criarCliente);
+router.put('/:id', authorize('admin'), atualizarCliente);
+router.delete('/:id', authorize('admin'), deletarCliente);
+
+// Vínculos com imóveis — só admin
+router.post('/:id/vinculos',              authorize('admin'), adicionarVinculo);
+router.delete('/:id/vinculos/:vinculoId', authorize('admin'), removerVinculo);
+
+// Comentários — cliente e admin
+router.post('/:id/vinculos/:vinculoId/comentarios',                          adicionarComentario);
+router.delete('/:id/vinculos/:vinculoId/comentarios/:comentarioId',          removerComentario);
 
 module.exports = router;

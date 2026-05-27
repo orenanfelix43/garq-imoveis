@@ -14,15 +14,45 @@ exports.listarUsuarios = async (req, res, next) => {
     }
 };
 
+// ─── Atualizar dados do usuário ───────────────────────────────────────────────
+exports.atualizarUsuario = async (req, res, next) => {
+    try {
+        const { name, email, phone, role } = req.body;
+
+        if (!name || !email || !phone) {
+            return res.status(400).json({ success: false, error: 'Nome, e-mail e telefone são obrigatórios.' });
+        }
+
+        const updates = { name: name.trim(), email: email.trim().toLowerCase(), phone: phone.trim() };
+        if (role && ['user', 'admin', 'cliente'].includes(role)) {
+            updates.role = role;
+        }
+
+        const usuario = await User.findByIdAndUpdate(
+            req.params.id,
+            updates,
+            { new: true, runValidators: true }
+        ).select('name email phone role');
+
+        if (!usuario) {
+            return res.status(404).json({ success: false, error: 'Usuário não encontrado.' });
+        }
+
+        return res.json({ success: true, data: usuario });
+    } catch (err) {
+        next(err);
+    }
+};
+
 // ─── Alterar role de um usuário ───────────────────────────────────────────────
 exports.alterarRole = async (req, res, next) => {
     try {
         const { role } = req.body;
 
-        if (!['user', 'admin'].includes(role)) {
+        if (!['user', 'admin', 'cliente'].includes(role)) {
             return res.status(400).json({
                 success: false,
-                error: 'Role inválido. Use "user" ou "admin".',
+                error: 'Role inválido. Use "user", "admin" ou "cliente".',
             });
         }
 

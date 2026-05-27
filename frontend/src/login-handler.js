@@ -42,8 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.clear();
                 localStorage.setItem('userName', result.user.name);
                 localStorage.setItem('userRole', result.user.role || 'user');
+                if (result.token) localStorage.setItem('authToken', result.token);
 
-                window.location.href = 'admin.html';
+                // Redirecionar por role
+                const role = result.user.role;
+                if (role === 'admin' || role === 'user') {
+                    window.location.href = 'admin.html';
+                } else if (role === 'cliente') {
+                    window.location.href = 'area-cliente.html';
+                } else {
+                    window.location.href = 'admin.html';
+                }
             } else {
                 throw new Error(result.error || 'Credenciais inválidas.');
             }

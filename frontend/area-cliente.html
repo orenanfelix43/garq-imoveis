@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Portfólio | GARQ Imóveis</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="min-h-screen bg-[#0a0a0a] text-[#fdfdfd]">
+
+<div id="toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+<!-- Header -->
+<header class="glass-panel border-b border-white/5 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <img src="assets/logo.webp" alt="GARQ Imóveis" class="h-8 w-auto object-contain brightness-110">
+        <div class="flex items-center gap-6">
+            <div class="text-right hidden sm:block">
+                <p id="user-name-display" class="text-xs font-bold uppercase tracking-tight text-white"></p>
+                <p class="text-[9px] text-gold uppercase tracking-[0.2em]">Área do Cliente</p>
+            </div>
+            <button id="logout-btn"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-all text-[10px] uppercase tracking-widest">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                Sair
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Main -->
+<main class="max-w-6xl mx-auto px-6 py-12">
+
+    <!-- Header da área -->
+    <div class="mb-12">
+        <p class="text-gold text-[10px] uppercase tracking-[0.4em] mb-2">Área Privada</p>
+        <h1 class="text-3xl font-serif uppercase tracking-tight">Meu Portfólio</h1>
+        <p class="text-gray-500 text-xs uppercase tracking-widest mt-2">Seus imóveis vinculados pela GARQ</p>
+    </div>
+
+    <!-- Lista de imóveis -->
+    <div id="imoveis-container" class="space-y-8">
+        <div class="flex flex-col items-center gap-3 py-20">
+            <i data-lucide="loader" class="w-6 h-6 text-gray-600 animate-spin"></i>
+            <p class="text-[9px] text-gray-600 uppercase tracking-widest">Carregando seu portfólio...</p>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modal de Documentos do Imóvel -->
+<div id="modal-docs-cliente" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden z-[100] items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border-gold/20 max-h-[90vh] flex flex-col">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02] flex-shrink-0">
+            <div>
+                <h3 id="modal-docs-titulo" class="font-serif text-lg uppercase tracking-widest text-gold">Documentos</h3>
+                <p id="modal-docs-subtitulo" class="text-[9px] text-gray-500 uppercase tracking-widest mt-0.5"></p>
+            </div>
+            <button onclick="fecharModalDocs()" class="text-gray-400 hover:text-white transition">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div id="modal-docs-lista" class="flex-1 overflow-y-auto p-6 space-y-2">
+            <p class="text-[10px] text-gray-600 uppercase tracking-widest text-center py-8">Nenhum documento disponível</p>
+        </div>
+    </div>
+</div>
+
+<!-- Configuração global -->
+<script>
+    window.__GARQ_CONFIG__ = {
+        API_URL: ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://localhost:5000/api'
+            : '/api'
+    };
+</script>
+<script type="module" src="src/area-cliente.js"></script>
+</body>
+</html>

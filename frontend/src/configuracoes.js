@@ -3,7 +3,8 @@ import { esc, showToast, showConfirm } from './ui-helpers.js';
 import { apiFetch } from './api-fetch.js';
 
 let configs       = [];
-let configAtualId = null; // id da lista aberta no modal de novo item
+let configAtualId = null;
+let todosUsuarios = [];
 
 // =============================================================================
 // HELPERS
@@ -328,6 +329,21 @@ async function removerItem(configId, itemId) {
     }
 }
 
+function setupBuscaUsuarios() {
+    const input = document.getElementById('search-usuarios');
+    if (!input) return;
+    input.oninput = (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtrados = todosUsuarios.filter(u =>
+            u.name.toLowerCase().includes(term) ||
+            u.email.toLowerCase().includes(term) ||
+            u.role.toLowerCase().includes(term)
+        );
+        const container = document.getElementById('usuarios-container');
+        if (container) renderUsuarios(container, filtrados);
+    };
+}
+
 // =============================================================================
 // USUÁRIOS
 // =============================================================================
@@ -345,27 +361,34 @@ async function fetchUsuarios() {
         }
 
         const result = await response.json();
-        if (result.success) renderUsuarios(container, result.data);
+        if (result.success) {
+            todosUsuarios = result.data;
+            renderUsuarios(container, todosUsuarios);
+            setupBuscaUsuarios();
+            const input = document.getElementById('search-usuarios');
+            if (input) input.value = '';
+        }
     } catch {
         container.innerHTML = `<p class="text-[10px] text-gray-600 uppercase tracking-widest text-center p-8">Falha ao carregar usuários.</p>`;
     }
 }
 
-function renderUsuarios(container, usuarios) {
-    if (!usuarios || usuarios.length === 0) {
+function renderUsuarios(container, usuarios) {    if (!usuarios || usuarios.length === 0) {
         container.innerHTML = `<p class="text-[10px] text-gray-600 uppercase tracking-widest text-center p-8">Nenhum usuário cadastrado.</p>`;
         return;
     }
 
-    const roleStyle = (role) => role === 'admin'
-        ? 'text-gold border-gold/30 bg-gold/10 hover:bg-gold/20'
-        : 'text-gray-400 border-white/10 bg-white/5 hover:bg-white/10';
+    const roleStyle = (role) => {
+        if (role === 'admin')    return 'text-gold border-gold/30 bg-gold/10 hover:bg-gold/20';
+        if (role === 'cliente')  return 'text-blue-400 border-blue-400/30 bg-blue-400/10 hover:bg-blue-400/20';
+        return 'text-gray-400 border-white/10 bg-white/5 hover:bg-white/10';
+    };
 
     container.innerHTML = usuarios.map(u => `
         <div class="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-all group">
             <div class="flex items-center gap-4 min-w-0">
                 <div class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="${u.role === 'admin' ? 'shield' : 'user'}" class="w-4 h-4 ${u.role === 'admin' ? 'text-gold' : 'text-gray-500'}"></i>
+                    <i data-lucide="${u.role === 'admin' ? 'shield' : u.role === 'cliente' ? 'user-check' : 'user'}" class="w-4 h-4 ${u.role === 'admin' ? 'text-gold' : u.role === 'cliente' ? 'text-blue-400' : 'text-gray-500'}"></i>
                 </div>
                 <div class="min-w-0">
                     <p class="text-xs font-medium text-white truncate">${esc(u.name)}</p>
@@ -373,10 +396,12 @@ function renderUsuarios(container, usuarios) {
                 </div>
             </div>
             <div class="flex items-center gap-3 flex-shrink-0">
-                <button onclick="alterarRole('${esc(u._id)}', '${esc(u.role)}')"
-                    class="text-[8px] uppercase tracking-widest font-bold border px-3 py-1.5 rounded transition-all cursor-pointer ${roleStyle(u.role)}"
-                    title="Clique para ${u.role === 'admin' ? 'rebaixar para usuário' : 'promover a admin'}">
+                <span class="text-[8px] uppercase tracking-widest font-bold border px-3 py-1.5 rounded ${roleStyle(u.role)}">
                     ${esc(u.role)}
+                </span>
+                <button onclick="abrirModalEditarUsuario('${esc(u._id)}', '${esc(u.name)}', '${esc(u.email)}', '${esc(u.phone || '')}', '${esc(u.role)}')"
+                    class="p-1.5 rounded text-gold/40 hover:text-gold hover:bg-white/5 transition-all opacity-0 group-hover:opacity-100" title="Editar usuário">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                 </button>
                 <button onclick="removerUsuario('${esc(u._id)}', '${esc(u.name)}')"
                     class="p-1.5 rounded text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100" title="Remover usuário">
@@ -389,6 +414,70 @@ function renderUsuarios(container, usuarios) {
     if (window.lucide) lucide.createIcons();
 }
 
+// =============================================================================
+// EDITAR USUÁRIO
+// =============================================================================
+
+function abrirModalEditarUsuario(id, nome, email, phone, role) {
+    document.getElementById('editar-user-id').value    = id;
+    document.getElementById('editar-user-nome').value  = nome;
+    document.getElementById('editar-user-email').value = email;
+    document.getElementById('editar-user-phone').value = phone;
+    // Pré-selecionar o role atual
+    const radio = document.querySelector(`input[name="editar-user-role"][value="${role}"]`);
+    if (radio) radio.checked = true;
+    document.getElementById('editar-user-erro').classList.add('hidden');
+    document.getElementById('modal-editar-usuario').classList.replace('hidden', 'flex');
+    setTimeout(() => document.getElementById('editar-user-nome')?.focus(), 100);
+}
+
+function fecharModalEditarUsuario() {
+    document.getElementById('modal-editar-usuario').classList.replace('flex', 'hidden');
+}
+
+async function salvarEdicaoUsuario() {
+    const id    = document.getElementById('editar-user-id').value;
+    const nome  = document.getElementById('editar-user-nome').value.trim();
+    const email = document.getElementById('editar-user-email').value.trim();
+    const phone = document.getElementById('editar-user-phone').value.trim();
+    const role  = document.querySelector('input[name="editar-user-role"]:checked')?.value;
+    const erroEl = document.getElementById('editar-user-erro');
+
+    erroEl.classList.add('hidden');
+
+    if (!nome || !email || !phone) {
+        erroEl.textContent = 'Todos os campos são obrigatórios.';
+        erroEl.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+            method:      'PATCH',
+            headers:     { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body:        JSON.stringify({ name: nome, email, phone, role }),
+        });
+        if (response.status === 401) { window.location.href = 'login.html'; return; }
+
+        const result = await response.json();
+        if (result.success) {
+            fecharModalEditarUsuario();
+            showToast('Usuário atualizado com sucesso.', 'success');
+            await fetchUsuarios();
+        } else {
+            erroEl.textContent = result.error || 'Erro ao atualizar usuário.';
+            erroEl.classList.remove('hidden');
+        }
+    } catch {
+        erroEl.textContent = 'Falha de conexão.';
+        erroEl.classList.remove('hidden');
+    }
+}
+
+// =============================================================================
+// MODAL NOVO USUÁRIO
+// =============================================================================
 function abrirModalNovoUsuario() {
     ['novo-user-nome', 'novo-user-email', 'novo-user-phone', 'novo-user-senha'].forEach(id => {
         const el = document.getElementById(id);
@@ -476,12 +565,12 @@ async function removerUsuario(id, nome) {
 }
 
 async function alterarRole(id, roleAtual) {
-    const novoRole = roleAtual === 'admin' ? 'user' : 'admin';
-    const msg = novoRole === 'admin'
-        ? 'Promover este usuário a administrador?'
-        : 'Rebaixar este usuário para acesso padrão?';
+    const roles = ['user', 'admin', 'cliente'];
+    const labels = { user: 'Usuário', admin: 'Admin', cliente: 'Cliente' };
 
-    const ok = await showConfirm(msg);
+    // Cicla para o próximo role
+    const proximoRole = roles[(roles.indexOf(roleAtual) + 1) % roles.length];
+    const ok = await showConfirm(`Alterar role para "${labels[proximoRole]}"?`);
     if (!ok) return;
 
     try {
@@ -489,13 +578,13 @@ async function alterarRole(id, roleAtual) {
             method:      'PATCH',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body:        JSON.stringify({ role: novoRole }),
+            body:        JSON.stringify({ role: proximoRole }),
         });
         if (response.status === 401) { window.location.href = 'login.html'; return; }
 
         const result = await response.json();
         if (result.success) {
-            showToast(`Usuário ${novoRole === 'admin' ? 'promovido a admin' : 'rebaixado para usuário'}.`, 'success');
+            showToast(`Role alterado para ${proximoRole}.`, 'success');
             await fetchUsuarios();
         } else {
             showToast(result.error || 'Erro ao alterar role.', 'error');
@@ -517,12 +606,15 @@ window.abrirModalNovoItem    = abrirModalNovoItem;
 window.fecharModalNovoItem   = fecharModalNovoItem;
 window.adicionarItem         = adicionarItem;
 window.salvarLabelInline     = salvarLabelInline;
-window.toggleItem            = toggleItem;
-window.removerItem           = removerItem;
-window.abrirModalNovoUsuario  = abrirModalNovoUsuario;
-window.fecharModalNovoUsuario = fecharModalNovoUsuario;
-window.criarUsuario           = criarUsuario;
-window.removerUsuario         = removerUsuario;
-window.alterarRole            = alterarRole;
+window.toggleItem               = toggleItem;
+window.removerItem              = removerItem;
+window.abrirModalNovoUsuario    = abrirModalNovoUsuario;
+window.fecharModalNovoUsuario   = fecharModalNovoUsuario;
+window.criarUsuario             = criarUsuario;
+window.removerUsuario           = removerUsuario;
+window.alterarRole              = alterarRole;
+window.abrirModalEditarUsuario  = abrirModalEditarUsuario;
+window.fecharModalEditarUsuario = fecharModalEditarUsuario;
+window.salvarEdicaoUsuario      = salvarEdicaoUsuario;
 
 document.addEventListener('DOMContentLoaded', init);

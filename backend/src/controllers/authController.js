@@ -7,9 +7,9 @@ const { Resend } = require('resend');
 // SMTP é bloqueado pelo Render free tier; Resend usa HTTP que não é bloqueado
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const signToken = (userId, role) =>
+const signToken = (userId, role, name) =>
     jwt.sign(
-        { id: userId, role },
+        { id: userId, role, name },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRE || '7d' }
     );
@@ -59,7 +59,7 @@ exports.register = async (req, res) => {
         }
 
         // role só aceita 'user' ou 'admin' — qualquer outro valor cai para 'user'
-        const rolePermitido = ['user', 'admin'].includes(req.body.role) ? req.body.role : 'user';
+        const rolePermitido = ['user', 'admin', 'cliente'].includes(req.body.role) ? req.body.role : 'user';
 
         const user = await User.create({
             name:  name.trim(),
@@ -69,11 +69,31 @@ exports.register = async (req, res) => {
             role:  rolePermitido,
         });
 
-        const token = signToken(user._id, user.role);
+        // Se existe um Cliente com o mesmo e-mail, vincular automaticamente
+        const Cliente = require('../models/Cliente');
+        const clienteExistente = await Cliente.findOne({ email: normalizedEmail });
+        if (clienteExistente && !clienteExistente.userId) {
+            clienteExistente.userId = user._id;
+            await clienteExistente.save();
+        } else if (!clienteExistente && rolePermitido === 'cliente') {
+            // Auto-cadastro: criar registro na collection Cliente automaticamente
+            await Cliente.create({
+                nome:      user.name,
+                telefone:  phone,
+                email:     normalizedEmail,
+                notas:     '',
+                userId:    user._id,
+                imoveis:   [],
+                criadoPor: user._id,
+            });
+        }
+
+        const token = signToken(user._id, user.role, user.name);
         res.cookie('token', token, cookieOptions());
 
         return res.status(201).json({
             success: true,
+            token,
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
 
@@ -108,12 +128,12 @@ exports.login = async (req, res) => {
             return res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
         }
 
-        const token = signToken(user._id, user.role);
+        const token = signToken(user._id, user.role, user.name);
         res.cookie('token', token, cookieOptions());
 
         return res.status(200).json({
             success: true,
-            token,   // retornado para mobile — cookie pode ser bloqueado por ITP
+            token,
             user: { id: user._id, name: user.name, email: user.email, role: user.role },
         });
 
