@@ -193,39 +193,9 @@ exports.removerVinculo = async (req, res, next) => {
 // =============================================================================
 exports.getMinhaArea = async (req, res, next) => {
     try {
-        const User = require('../models/User');
-
-        console.log(`[MINHA-AREA] userId: ${req.user.id} role: ${req.user.role}`);
-
-        // Buscar o usuário logado para pegar o email
-        const user = await User.findById(req.user.id).select('email name').lean();
-        console.log(`[MINHA-AREA] user: ${user?.email}`);
-
-        // Busca primeiro por userId
-        let cliente = await Cliente.findOne({ userId: req.user.id })
-            .populate('imoveis.imovelId', 'titulo subtitulo tipo galeria status finalidade atributos descricaoLonga isVisible')
+        const cliente = await Cliente.findOne({ userId: req.user.id })
+            .populate({ path: 'imoveis.imovelId', match: { isVisible: true }, select: 'titulo subtitulo tipo galeria status finalidade atributos descricaoLonga isVisible' })
             .lean();
-        console.log(`[MINHA-AREA] por userId: ${cliente ? `encontrado id=${cliente._id} imoveis=${cliente.imoveis?.length}` : 'não encontrado'}`);
-
-        // Fallback por email
-        if (!cliente && user?.email) {
-            const clientePorEmail = await Cliente.findOne({ email: user.email });
-            console.log(`[MINHA-AREA] por email "${user.email}": ${clientePorEmail ? `encontrado id=${clientePorEmail._id} userId=${clientePorEmail.userId}` : 'não encontrado'}`);
-
-            // Debug — listar todos os clientes para comparar
-            const todos = await Cliente.find({}).select('nome email userId').lean();
-            console.log(`[MINHA-AREA] todos os clientes:`, JSON.stringify(todos.map(c => ({ nome: c.nome, email: c.email, userId: c.userId }))));
-
-            if (clientePorEmail) {
-                if (!clientePorEmail.userId) {
-                    clientePorEmail.userId = req.user.id;
-                    await clientePorEmail.save();
-                }
-                cliente = await Cliente.findById(clientePorEmail._id)
-                    .populate('imoveis.imovelId', 'titulo subtitulo tipo galeria status finalidade atributos descricaoLonga isVisible')
-                    .lean();
-            }
-        }
 
         if (!cliente) {
             return res.status(404).json({
@@ -234,7 +204,7 @@ exports.getMinhaArea = async (req, res, next) => {
             });
         }
 
-        console.log(`[MINHA-AREA] retornando ${cliente.imoveis?.length} vínculos`);
+        cliente.imoveis = (cliente.imoveis || []).filter(vinculo => vinculo.imovelId);
         return res.json({ success: true, data: cliente });
     } catch (err) { next(err); }
 };
@@ -257,8 +227,8 @@ exports.adicionarComentario = async (req, res, next) => {
         if (!cliente) return res.status(404).json({ success: false, error: 'Cliente não encontrado.' });
 
         // Cliente só pode comentar no próprio portfólio
-        if (req.user.role === 'cliente' && cliente.userId?.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, error: 'Acesso negado.' });
+        if (req.user.role !== 'admin' && cliente.userId?.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, error: 'Recurso não encontrado.' });
         }
 
         const vinculo = cliente.imoveis.id(req.params.vinculoId);
@@ -282,6 +252,10 @@ exports.removerComentario = async (req, res, next) => {
         const cliente = await Cliente.findById(req.params.id);
         if (!cliente) return res.status(404).json({ success: false, error: 'Cliente não encontrado.' });
 
+        if (req.user.role !== 'admin' && cliente.userId?.toString() !== req.user.id) {
+            return res.status(404).json({ success: false, error: 'Recurso não encontrado.' });
+        }
+
         const vinculo = cliente.imoveis.id(req.params.vinculoId);
         if (!vinculo) return res.status(404).json({ success: false, error: 'Vínculo não encontrado.' });
 
@@ -301,4 +275,24 @@ exports.removerComentario = async (req, res, next) => {
 
         return res.json({ success: true, data: cliente });
     } catch (err) { next(err); }
+};
+
+exports.vincularUsuario = async (req, res, next) => {
+    try {
+        const User = require('../models/User');
+        const { userId } = req.body;
+        if (!isValidId(req.params.id) || !isValidId(userId)) {
+            return res.status(400).json({ success: false, error: 'ID inválido.' });
+        }
+        const [cliente, user, duplicate] = await Promise.all([
+            Cliente.findById(req.params.id),
+            User.findOne({ _id: userId, role: 'cliente' }).select('_id'),
+            Cliente.exists({ _id: { $ne: req.params.id }, userId }),
+        ]);
+        if (!cliente || !user) return res.status(404).json({ success: false, error: 'Recurso não encontrado.' });
+        if (duplicate) return res.status(409).json({ success: false, error: 'Usuário já vinculado a outro cliente.' });
+        cliente.userId = user._id;
+        await cliente.save();
+        return res.json({ success: true, data: { _id: cliente._id, userId: cliente.userId } });
+    } catch (error) { next(error); }
 };

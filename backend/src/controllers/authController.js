@@ -1,285 +1,120 @@
-const User     = require('../models/User');
-const jwt      = require('jsonwebtoken');
-const crypto   = require('crypto');
+const crypto = require('crypto');
 const { Resend } = require('resend');
+const User = require('../models/User');
+const Cliente = require('../models/Cliente');
+const Session = require('../models/Session');
+const { createSession, setSessionCookies, clearSessionCookies } = require('../services/sessionService');
+const logger = require('../utils/logger');
 
-// Resend — API HTTP, funciona em qualquer hosting (Render, Vercel, etc.)
-// SMTP é bloqueado pelo Render free tier; Resend usa HTTP que não é bloqueado
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_test_placeholder');
 
-const signToken = (userId, role, name) =>
-    jwt.sign(
-        { id: userId, role, name },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRE || '7d' }
-    );
+async function startSession(res, user) {
+    const session = await createSession(user._id);
+    setSessionCookies(res, session);
+}
 
-// ─── Opções do cookie de sessão ───────────────────────────────────────────────
-const cookieOptions = () => ({
-    httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
-    maxAge:   7 * 24 * 60 * 60 * 1000,
-    path:     '/',
-});
-
-const cookieClearOptions = () => ({
-    httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
-    expires:  new Date(0),
-    path:     '/',
-});
-
-// =============================================================================
-// REGISTRO
-// =============================================================================
 exports.register = async (req, res) => {
     try {
         const { name, email, phone, password } = req.body;
-
-        if (!name || !email || !phone || !password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Todos os campos são obrigatórios.',
-            });
+        if (![name, email, phone, password].every(value => typeof value === 'string' && value.trim())) {
+            return res.status(400).json({ success: false, error: 'Todos os campos são obrigatórios.' });
         }
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                error: 'A senha deve ter no mínimo 6 caracteres.',
-            });
-        }
+        if (password.length < 8) return res.status(400).json({ success: false, error: 'A senha deve ter no mínimo 8 caracteres.' });
 
         const normalizedEmail = email.toLowerCase().trim();
+        if (await User.exists({ email: normalizedEmail })) return res.status(409).json({ success: false, error: 'Email já cadastrado.' });
 
-        const userExists = await User.exists({ email: normalizedEmail });
-        if (userExists) {
-            return res.status(409).json({ success: false, error: 'Email já cadastrado.' });
+        const isAdminCreating = req.user?.role === 'admin';
+        const requestedRole = req.body.role;
+        const role = isAdminCreating && ['user', 'admin', 'cliente'].includes(requestedRole) ? requestedRole : 'cliente';
+        const user = await User.create({ name: name.trim(), email: normalizedEmail, phone: phone.trim(), password, role });
+
+        const existingClient = await Cliente.exists({ email: normalizedEmail });
+        if (!existingClient && role === 'cliente') {
+            await Cliente.create({ nome: user.name, telefone: user.phone, email: normalizedEmail, userId: user._id, criadoPor: user._id, imoveis: [] });
         }
 
-        // role só aceita 'user' ou 'admin' — qualquer outro valor cai para 'user'
-        const rolePermitido = ['user', 'admin', 'cliente'].includes(req.body.role) ? req.body.role : 'user';
-
-        const user = await User.create({
-            name:  name.trim(),
-            email: normalizedEmail,
-            phone,
-            password,
-            role:  rolePermitido,
-        });
-
-        // Se existe um Cliente com o mesmo e-mail, vincular automaticamente
-        const Cliente = require('../models/Cliente');
-        const clienteExistente = await Cliente.findOne({ email: normalizedEmail });
-        if (clienteExistente && !clienteExistente.userId) {
-            clienteExistente.userId = user._id;
-            await clienteExistente.save();
-        } else if (!clienteExistente && rolePermitido === 'cliente') {
-            // Auto-cadastro: criar registro na collection Cliente automaticamente
-            await Cliente.create({
-                nome:      user.name,
-                telefone:  phone,
-                email:     normalizedEmail,
-                notas:     '',
-                userId:    user._id,
-                imoveis:   [],
-                criadoPor: user._id,
-            });
-        }
-
-        const token = signToken(user._id, user.role, user.name);
-        res.cookie('token', token, cookieOptions());
-
-        return res.status(201).json({
-            success: true,
-            token,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role },
-        });
-
+        if (!req.user) await startSession(res, user);
+        return res.status(201).json({ success: true, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
-        console.error('Register Error:', error);
+        logger.error('auth.register.failed', { requestId: req.id, errorName: error.name });
         return res.status(500).json({ success: false, error: 'Erro ao registrar usuário.' });
     }
 };
 
-// =============================================================================
-// LOGIN
-// =============================================================================
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email e senha são obrigatórios.',
-            });
-        }
-
+        if (typeof email !== 'string' || typeof password !== 'string') return res.status(400).json({ success: false, error: 'Email e senha são obrigatórios.' });
         const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
-
-        if (!user) {
-            return res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
-        }
-
-        const isMatch = await user.matchPassword(password);
-        if (!isMatch) {
-            return res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
-        }
-
-        const token = signToken(user._id, user.role, user.name);
-        res.cookie('token', token, cookieOptions());
-
-        return res.status(200).json({
-            success: true,
-            token,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role },
-        });
-
+        if (!user || !await user.matchPassword(password)) return res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
+        await startSession(res, user);
+        return res.json({ success: true, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
     } catch (error) {
-        console.error('Login Error:', error);
+        logger.error('auth.login.failed', { requestId: req.id, errorName: error.name });
         return res.status(500).json({ success: false, error: 'Erro no servidor.' });
     }
 };
 
-// =============================================================================
-// LOGOUT
-// =============================================================================
-exports.logout = (_req, res) => {
-    res.cookie('token', '', cookieClearOptions());
-    return res.status(200).json({ success: true, message: 'Logout realizado com sucesso.' });
+exports.getSession = (req, res) => res.json({ success: true, user: req.user });
+
+exports.logout = async (req, res, next) => {
+    try {
+        await Session.updateOne({ _id: req.sessionRecord._id }, { revokedAt: new Date() });
+        clearSessionCookies(res);
+        return res.json({ success: true, message: 'Logout realizado com sucesso.' });
+    } catch (error) { next(error); }
 };
 
-// =============================================================================
-// ESQUECI A SENHA
-// =============================================================================
 exports.forgotPassword = async (req, res) => {
+    const generic = 'Se este e-mail estiver cadastrado, você receberá um link em breve.';
     try {
-        const { email } = req.body;
+        if (typeof req.body.email !== 'string') return res.status(400).json({ success: false, message: 'E-mail é obrigatório.' });
+        const user = await User.findOne({ email: req.body.email.toLowerCase().trim() });
+        if (!user) return res.json({ success: true, message: generic });
 
-        if (!email) {
-            return res.status(400).json({ success: false, message: 'E-mail é obrigatório.' });
-        }
-
-        const user = await User.findOne({ email: email.toLowerCase().trim() });
-
-        if (!user) {
-            return res.status(200).json({
-                success: true,
-                message: 'Se este e-mail estiver cadastrado, você receberá um link em breve.',
-            });
-        }
-
-        const rawToken    = crypto.randomBytes(32).toString('hex');
-        const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-
-        user.resetPasswordToken   = hashedToken;
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        user.resetPasswordToken = crypto.createHash('sha256').update(rawToken).digest('hex');
         user.resetPasswordExpires = Date.now() + 3_600_000;
         await user.save({ validateBeforeSave: false });
-
-        const baseUrl  = process.env.FRONTEND_URL || 'http://localhost:5500';
-        const resetUrl = `${baseUrl}/redefinir-senha.html?token=${rawToken}`;
-
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5500';
+        const resetUrl = `${baseUrl}/redefinir-senha.html?token=${encodeURIComponent(rawToken)}`;
         try {
             await resend.emails.send({
-                from:    'GARQ Imóveis <noreply@garqimoveis.com.br>',
-                to:      user.email,
+                from: process.env.EMAIL_FROM || 'GARQ Imóveis <noreply@example.invalid>',
+                to: user.email,
                 subject: 'Recuperação de Senha | GARQ Suporte',
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;
-                                padding: 32px; background: #0a0a0a; color: #fff; border-radius: 8px;">
-                        <h2 style="color: #c5a059; margin-bottom: 16px;">Recuperação de Senha</h2>
-                        <p style="color: #ccc; margin-bottom: 24px;">
-                            Você solicitou a redefinição da sua senha na GARQ.
-                            Clique no botão abaixo para prosseguir.
-                        </p>
-                        <p style="text-align: center; margin: 32px 0;">
-                            <a href="${resetUrl}"
-                               style="background: #c5a059; color: #000; padding: 14px 28px;
-                                      text-decoration: none; border-radius: 4px; font-weight: bold;
-                                      font-family: Arial, sans-serif; display: inline-block;">
-                                Redefinir Senha
-                            </a>
-                        </p>
-                        <p style="color: #888; font-size: 13px;">
-                            <strong>Este link expira em 1 hora.</strong>
-                        </p>
-                        <p style="color: #555; font-size: 11px; margin-top: 8px;">
-                            Caso o botão não funcione, copie e cole este link no navegador:<br>
-                            <a href="${resetUrl}" style="color: #c5a059; word-break: break-all;">${resetUrl}</a>
-                        </p>
-                        <hr style="border-color: #222; margin: 24px 0;">
-                        <p style="color: #555; font-size: 12px;">
-                            Se você não solicitou esta recuperação, ignore este e-mail.
-                            Sua senha permanece inalterada.
-                        </p>
-                    </div>
-                `,
+                html: `<p>Foi solicitada uma redefinição de senha.</p><p><a href="${resetUrl}">Redefinir senha</a></p><p>O link expira em 1 hora.</p>`,
             });
-
-        } catch (mailError) {
-            console.error('[MAIL] Exceção ao enviar e-mail:', mailError.message);
-            user.resetPasswordToken   = undefined;
+        } catch (error) {
+            user.resetPasswordToken = undefined;
             user.resetPasswordExpires = undefined;
             await user.save({ validateBeforeSave: false });
-            return res.status(500).json({
-                success: false,
-                message: 'Não foi possível enviar o e-mail. Tente novamente mais tarde.',
-            });
+            logger.error('auth.password_reset.email_failed', { requestId: req.id, errorName: error.name });
+            return res.status(503).json({ success: false, message: 'Não foi possível enviar o e-mail. Tente novamente mais tarde.' });
         }
-
-        return res.status(200).json({
-            success: true,
-            message: 'Se este e-mail estiver cadastrado, você receberá um link em breve.',
-        });
-
+        return res.json({ success: true, message: generic });
     } catch (error) {
-        console.error('Forgot Password Error:', error);
+        logger.error('auth.password_reset.request_failed', { requestId: req.id, errorName: error.name });
         return res.status(500).json({ success: false, message: 'Erro ao processar solicitação.' });
     }
 };
 
-// =============================================================================
-// RESETAR SENHA
-// =============================================================================
 exports.resetPassword = async (req, res) => {
     try {
         const { token, password } = req.body;
-
-        if (!token || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Token e nova senha são obrigatórios.',
-            });
-        }
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: 'A senha deve ter no mínimo 6 caracteres.',
-            });
-        }
-
+        if (typeof token !== 'string' || typeof password !== 'string' || password.length < 8) return res.status(400).json({ success: false, message: 'Token válido e senha com ao menos 8 caracteres são obrigatórios.' });
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-
-        const user = await User.findOne({
-            resetPasswordToken:   hashedToken,
-            resetPasswordExpires: { $gt: Date.now() },
-        });
-
-        if (!user) {
-            return res.status(400).json({ success: false, message: 'Link inválido ou expirado.' });
-        }
-
-        user.password             = password;
-        user.resetPasswordToken   = undefined;
+        const user = await User.findOne({ resetPasswordToken: hashedToken, resetPasswordExpires: { $gt: Date.now() } });
+        if (!user) return res.status(400).json({ success: false, message: 'Link inválido ou expirado.' });
+        user.password = password;
+        user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
         await user.save();
-
-        return res.status(200).json({ success: true, message: 'Senha atualizada com sucesso!' });
-
+        await Session.updateMany({ userId: user._id, revokedAt: null }, { revokedAt: new Date() });
+        return res.json({ success: true, message: 'Senha atualizada com sucesso!' });
     } catch (error) {
-        console.error('Reset Password Error:', error);
+        logger.error('auth.password_reset.failed', { requestId: req.id, errorName: error.name });
         return res.status(500).json({ success: false, message: 'Erro interno ao resetar senha.' });
     }
 };

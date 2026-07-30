@@ -88,7 +88,7 @@
                 <p class="text-gold text-[10px] uppercase tracking-[0.4em] mb-2">Gestão Estratégica</p>
                 <h2 class="text-3xl font-serif uppercase tracking-tight">Ativos Imobiliários</h2>
             </div>
-            <button onclick="openModal('add')" class="btn-primary flex items-center gap-2">
+            <button data-action="open-add-property" class="btn-primary flex items-center gap-2">
                 <i data-lucide="plus" class="w-4 h-4"></i> Novo Imóvel
             </button>
         </div>
@@ -146,7 +146,7 @@
             <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
                 <h3 id="modal-title" class="font-serif text-xl uppercase tracking-widest text-gold">Adicionar Imóvel
                 </h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white transition"><i
+                <button data-action="close-property-modal" class="text-gray-400 hover:text-white transition"><i
                         data-lucide="x"></i></button>
             </div>
 
@@ -227,7 +227,7 @@
                                 do Ativo (Máx. 10)</label>
                             <p class="text-[10px] text-gray-500">Ex: Área Terreno, Suítes, Vagas, etc.</p>
                         </div>
-                        <button type="button" onclick="addAttrRow()"
+                        <button type="button" data-action="add-attribute"
                             class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-[10px] uppercase tracking-widest transition border border-white/5">
                             <i data-lucide="plus" class="w-3 h-3 inline mr-1"></i> Adicionar Atributo
                         </button>
@@ -245,7 +245,7 @@
                 </div>
 
                 <div class="flex justify-end gap-4 pt-6 border-t border-white/5">
-                    <button type="button" onclick="closeModal()"
+                    <button type="button" data-action="close-property-modal"
                         class="px-6 py-2 text-sm uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
                     <button type="submit" class="btn-primary shadow-lg shadow-gold/20">Salvar Ativo</button>
                 </div>
@@ -267,7 +267,7 @@
                     <h3 id="modal-docs-title" class="font-serif text-xl uppercase tracking-widest text-gold">Documentos</h3>
                     <p id="modal-docs-subtitle" class="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5"></p>
                 </div>
-                <button onclick="closeDocsModal()" class="text-gray-400 hover:text-white transition">
+                <button data-action="close-documents-modal" class="text-gray-400 hover:text-white transition">
                     <i data-lucide="x"></i>
                 </button>
             </div>
@@ -319,4 +319,4 @@
     <script type="module" src="src/admin.js"></script>
 </body>
 
-</html> 
+</html>

@@ -12,19 +12,19 @@ const {
     toggleVisibilidade,
 } = require('../controllers/imovelController');
 
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, csrfProtection } = require('../middleware/auth');
 
 // ─── Rotas públicas ───────────────────────────────────────────────────────────
 router.get('/',            getImoveis);      // filtra isVisible: true sempre
 
 // ─── Rotas protegidas ─────────────────────────────────────────────────────────
-router.get('/admin/todos', protect, getImoveisAdmin); // DEVE vir antes de /:id
+router.get('/admin/todos', protect, authorize('admin'), getImoveisAdmin); // DEVE vir antes de /:id
 router.get('/:id',         getImovel);
 
-router.post('/',    protect,                    criarImovel);
-router.put('/:id',  protect,                    atualizarImovel);
-router.delete('/:id', protect, authorize('admin'), deletarImovel);
-router.patch('/:id/destaque',     protect, authorize('admin'), setDestaque);
-router.patch('/:id/visibilidade', protect,                     toggleVisibilidade);
+router.post('/',    protect, csrfProtection, authorize('admin'), criarImovel);
+router.put('/:id',  protect, csrfProtection, authorize('admin'), atualizarImovel);
+router.delete('/:id', protect, csrfProtection, authorize('admin'), deletarImovel);
+router.patch('/:id/destaque',     protect, csrfProtection, authorize('admin'), setDestaque);
+router.patch('/:id/visibilidade', protect, csrfProtection, authorize('admin'), toggleVisibilidade);
 
 module.exports = router;

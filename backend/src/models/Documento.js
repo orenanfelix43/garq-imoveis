@@ -32,6 +32,10 @@ const DocumentoSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        resourceType: { type: String, enum: ['raw', 'image'], default: 'raw' },
+        deliveryType: { type: String, enum: ['authenticated', 'upload'], default: 'upload' },
+        accessMode: { type: String, enum: ['authenticated', 'legacy_public'], default: 'legacy_public', index: true },
+        format: { type: String, trim: true, default: '' },
         uploadadoPor: {
             type: mongoose.Schema.ObjectId,
             ref: 'User',

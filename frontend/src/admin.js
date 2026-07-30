@@ -1,6 +1,6 @@
 import { API_URL } from './config.js';
-import { esc, showToast, showConfirm } from './ui-helpers.js';
-import { apiFetch } from './api-fetch.js';
+import { esc, showToast, showConfirm, bindActions, isObjectId } from './ui-helpers.js';
+import { apiFetch, getCurrentUser } from './api-fetch.js';
 
 let tempPhotos = [];
 let tempAttrs  = [];
@@ -29,11 +29,29 @@ function compressImage(file, maxPx = 1280, quality = 0.8) {
 // =============================================================================
 
 async function init() {
-    loadUserDisplay();
+    const user = await getCurrentUser('admin');
+    if (!user) { window.location.href = 'login.html'; return; }
+    loadUserDisplay(user);
     setupFileInput();
     setupSearch();
     setupForm();
     setupLogout();
+    bindActions(document, {
+        'fetch-properties': () => fetchProperties(),
+        'open-docs': data => isObjectId(data.id) && openDocsModal(data.id, data.title || ''),
+        'toggle-visibility': data => isObjectId(data.id) && toggleVisibilidade(data.id),
+        'edit-property': data => isObjectId(data.id) && editItem(data.id),
+        'delete-property': data => isObjectId(data.id) && deleteItem(data.id),
+        'remove-photo': data => Number.isSafeInteger(Number(data.index)) && removePhoto(Number(data.index)),
+        'preview-doc': data => previewDoc(data.path, data.name || '', data.type || ''),
+        'download-doc': data => downloadDoc(data.path, data.name || ''),
+        'delete-doc': data => isObjectId(data.id) && deleteDoc(data.id),
+        'close-preview': () => closePreviewDoc(),
+        'open-add-property': () => openModal('add'),
+        'close-property-modal': () => closeModal(),
+        'add-attribute': () => addAttrRow(),
+        'close-documents-modal': () => closeDocsModal(),
+    });
     await Promise.all([fetchProperties(), loadSelects()]);
     if (window.lucide) lucide.createIcons();
 }
@@ -112,13 +130,11 @@ function populateStatusFilter() {
         ).join('');
 }
 
-function loadUserDisplay() {
-    const userName    = localStorage.getItem('userName');
-    const userRole    = localStorage.getItem('userRole');
+function loadUserDisplay(user) {
     const nameDisplay = document.getElementById('user-name-display');
     const roleDisplay = document.getElementById('user-role-display');
-    if (userName && nameDisplay) nameDisplay.textContent = userName;
-    if (userRole && roleDisplay) roleDisplay.textContent = userRole;
+    if (nameDisplay) nameDisplay.textContent = user.name;
+    if (roleDisplay) roleDisplay.textContent = user.role;
 }
 
 // =============================================================================
@@ -161,7 +177,7 @@ async function fetchProperties() {
                 <div class="p-16 text-center flex flex-col items-center gap-4">
                     <i data-lucide="wifi-off" class="w-8 h-8 text-gray-700"></i>
                     <p class="text-[10px] text-gray-500 uppercase tracking-widest">Falha de conexão</p>
-                    <button onclick="fetchProperties()" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
+                    <button data-action="fetch-properties" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
                         Tentar novamente
                     </button>
                 </div>`;
@@ -192,7 +208,7 @@ function renderList(container, dataToRender) {
             <div class="p-6 flex items-center justify-between hover:bg-white/[0.02] transition-all group ${p.isVisible === false ? 'opacity-50' : ''}">
                 <div class="flex items-center gap-6">
                     <div class="w-16 h-16 rounded-lg overflow-hidden border border-white/10 bg-white/5 relative">
-                        <img src="${esc(safeUrl)}" class="w-full h-full object-cover" onerror="this.src='assets/placeholder.webp'">
+                        <img src="${esc(safeUrl)}" class="w-full h-full object-cover" data-fallback="true">
                         ${p.isVisible === false ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center"><i data-lucide="eye-off" class="w-4 h-4 text-gray-400"></i></div>' : ''}
                     </div>
                     <div>
@@ -209,18 +225,18 @@ function renderList(container, dataToRender) {
                     </div>
                 </div>
                 <div class="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onclick="openDocsModal('${esc(p._id)}', '${esc(p.titulo)}')" class="text-blue-400/50 hover:text-blue-400 transition-colors" title="Documentos">
+                    <button data-action="open-docs" data-id="${esc(p._id)}" data-title="${esc(p.titulo)}" class="text-blue-400/50 hover:text-blue-400 transition-colors" title="Documentos">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="toggleVisibilidade('${esc(p._id)}')"
+                    <button data-action="toggle-visibility" data-id="${esc(p._id)}"
                         class="${p.isVisible === false ? 'text-gray-600 hover:text-gray-400' : 'text-green-400/50 hover:text-green-400'} transition-colors"
                         title="${p.isVisible === false ? 'Oculto — clique para publicar' : 'Visível — clique para ocultar'}">
                         <i data-lucide="${p.isVisible === false ? 'eye-off' : 'eye'}" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="editItem('${esc(p._id)}')" class="text-gold/50 hover:text-gold transition-colors" title="Editar">
+                    <button data-action="edit-property" data-id="${esc(p._id)}" class="text-gold/50 hover:text-gold transition-colors" title="Editar">
                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="deleteItem('${esc(p._id)}')" class="text-red-500/50 hover:text-red-500 transition-colors" title="Excluir">
+                    <button data-action="delete-property" data-id="${esc(p._id)}" class="text-red-500/50 hover:text-red-500 transition-colors" title="Excluir">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -360,7 +376,7 @@ function setupForm() {
         const url    = id ? `${API_URL}/imoveis/${id}` : `${API_URL}/imoveis`;
 
         try {
-            const response = await fetch(url, {
+            const response = await apiFetch(url, {
                 method,
                 headers:     { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -431,8 +447,8 @@ function renderPhotoPreview() {
     if (!grid) return;
     grid.innerHTML = tempPhotos.map((photo, index) => `
         <div class="relative w-24 h-24 border border-white/10 rounded overflow-hidden">
-            <img src="${esc(photo.src)}" class="w-full h-full object-cover" onerror="this.src='assets/placeholder.webp'">
-            <button type="button" onclick="removePhoto(${index})" class="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white">
+            <img src="${esc(photo.src)}" class="w-full h-full object-cover" data-fallback="true">
+            <button type="button" data-action="remove-photo" data-index="${index}" class="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white">
                 <i data-lucide="x" class="w-3 h-3"></i>
             </button>
         </div>
@@ -529,7 +545,6 @@ function setupLogout() {
             });
         } catch (_) {
         } finally {
-            localStorage.clear();
             window.location.href = 'login.html';
         }
     };
@@ -719,7 +734,7 @@ function renderDocumentos(container, docs) {
         return `
             <div class="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all group">
                 <div class="flex items-center gap-3 min-w-0 flex-1 ${podePreviw ? 'cursor-pointer' : ''}"
-                     ${podePreviw ? `onclick="previewDoc('${esc(doc.url)}', '${esc(doc.nome)}', '${esc(doc.tipo)}')" title="Clique para visualizar"` : ''}>
+                     ${podePreviw ? `data-action="preview-doc" data-path="${esc(doc.downloadPath)}" data-name="${esc(doc.nome)}" data-type="${esc(doc.tipo)}" title="Clique para visualizar"` : ''}>
                     <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${cor}">
                         <i data-lucide="${podePreviw ? 'eye' : icone}" class="w-4 h-4"></i>
                     </div>
@@ -732,11 +747,11 @@ function renderDocumentos(container, docs) {
                     </div>
                 </div>
                 <div class="flex gap-2 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onclick="downloadDoc('${esc(doc.url)}', '${esc(doc.nome)}')"
+                    <button data-action="download-doc" data-path="${esc(doc.downloadPath)}" data-name="${esc(doc.nome)}"
                         class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-all" title="Baixar">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                     </button>
-                    <button onclick="deleteDoc('${esc(doc._id)}')"
+                    <button data-action="delete-doc" data-id="${esc(doc._id)}"
                         class="p-1.5 rounded text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-all" title="Excluir">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                     </button>
@@ -749,6 +764,7 @@ function renderDocumentos(container, docs) {
 }
 
 async function previewDoc(url, nome, tipo) {
+    if (typeof url !== 'string' || !url.startsWith('/api/')) return;
     // Criar overlay de preview
     const overlay = document.createElement('div');
     overlay.id        = 'doc-preview-overlay';
@@ -761,11 +777,11 @@ async function previewDoc(url, nome, tipo) {
                 <span class="text-xs uppercase tracking-widest text-white truncate max-w-[400px]">${esc(nome)}</span>
             </div>
             <div class="flex items-center gap-3 flex-shrink-0">
-                <button onclick="downloadDoc('${esc(url)}', '${esc(nome)}')"
+                <button data-action="download-doc" data-path="${esc(url)}" data-name="${esc(nome)}"
                     class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs uppercase tracking-widest text-gray-300 hover:text-white transition-all">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i> Baixar
                 </button>
-                <button onclick="closePreviewDoc()"
+                <button data-action="close-preview"
                     class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -805,9 +821,8 @@ async function previewDoc(url, nome, tipo) {
                     <i data-lucide="loader" class="w-6 h-6 text-gold animate-spin"></i>
                     <p class="text-[10px] text-gray-500 uppercase tracking-widest">Carregando PDF...</p>
                 </div>
-                <iframe src="${url}"
-                    class="w-full h-full border-0"
-                    onload="document.getElementById('viewer-loading')?.remove()">
+                <iframe src="${esc(url)}"
+                    class="w-full h-full border-0">
                 </iframe>
             </div>`;
         if (window.lucide) lucide.createIcons();
@@ -821,9 +836,8 @@ async function previewDoc(url, nome, tipo) {
                     <i data-lucide="loader" class="w-6 h-6 text-gold animate-spin"></i>
                     <p class="text-[10px] text-gray-500 uppercase tracking-widest">Carregando visualizador...</p>
                 </div>
-                <iframe src="${viewerUrl}"
-                    class="w-full h-full border-0"
-                    onload="document.getElementById('viewer-loading')?.remove()">
+                <iframe src="${esc(viewerUrl)}"
+                    class="w-full h-full border-0">
                 </iframe>
             </div>`;
         if (window.lucide) lucide.createIcons();
@@ -862,7 +876,7 @@ function formatBytes(bytes) {
 function downloadDoc(url, nome) {
     // Cloudinary raw URLs bloqueiam download forçado via CORS.
     // Abre em nova aba: browser faz download, celular abre no app nativo.
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (typeof url === 'string' && url.startsWith('/api/')) window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 async function deleteDoc(docId) {

@@ -1,25 +1,26 @@
-/**
- * api-fetch.js
- * Wrapper de fetch que injeta Authorization: Bearer <token> automaticamente.
- * Necessário para mobile (Safari ITP bloqueia cookies SameSite=None cross-origin).
- * Usa cookie quando disponível, token do localStorage como fallback.
- */
+import { API_URL } from './config.js';
+
+function csrfToken() {
+    const cookie = document.cookie.split('; ').find(item => item.startsWith('XSRF-TOKEN='));
+    return cookie ? decodeURIComponent(cookie.slice('XSRF-TOKEN='.length)) : '';
+}
 
 export function apiFetch(url, options = {}) {
-    const token = localStorage.getItem('authToken');
-
-    const headers = {
-        ...(options.headers || {}),
-    };
-
-    // Injeta o header Authorization como fallback para quando o cookie não é enviado
-    if (token && !headers['Authorization']) {
-        headers['Authorization'] = `Bearer ${token}`;
+    const method = (options.method || 'GET').toUpperCase();
+    const headers = { ...(options.headers || {}) };
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        const token = csrfToken();
+        if (token) headers['X-CSRF-Token'] = token;
     }
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
 
-    return fetch(url, {
-        ...options,
-        headers,
-        credentials: 'include', // mantém o cookie quando disponível
-    });
+export async function getCurrentUser(requiredRole) {
+    for (const key of ['authToken', 'userName', 'userRole']) localStorage.removeItem(key);
+    const response = await apiFetch(`${API_URL}/auth/session`);
+    if (!response.ok) return null;
+    const result = await response.json();
+    if (!result.success || !result.user) return null;
+    if (requiredRole && result.user.role !== requiredRole) return null;
+    return result.user;
 }

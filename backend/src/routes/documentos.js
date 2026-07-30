@@ -5,14 +5,17 @@ const {
     listarDocumentos,
     uploadDocumento,
     deletarDocumento,
+    baixarDocumento,
 } = require('../controllers/documentoController');
 
-const { protect } = require('../middleware/auth');
+const { protect, authorize, csrfProtection } = require('../middleware/auth');
+const { requirePropertyAccess } = require('../services/authorization');
 
-router.use(protect);
+router.use(protect, requirePropertyAccess);
 
 router.get('/',          listarDocumentos);
-router.post('/',         uploadDocumento);
-router.delete('/:docId', deletarDocumento);
+router.get('/:docId/download', baixarDocumento);
+router.post('/',         csrfProtection, authorize('admin'), uploadDocumento);
+router.delete('/:docId', csrfProtection, authorize('admin'), deletarDocumento);
 
 module.exports = router;

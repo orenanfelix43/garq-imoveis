@@ -12,29 +12,31 @@ const {
     getMinhaArea,
     adicionarComentario,
     removerComentario,
+    vincularUsuario,
 } = require('../controllers/clienteController');
 
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, csrfProtection } = require('../middleware/auth');
 
 // Todas protegidas
 router.use(protect);
 
 // Área do cliente — acesso pelo próprio cliente
-router.get('/minha-area', getMinhaArea);
+router.get('/minha-area', authorize('cliente'), getMinhaArea);
 
 // Admin — gestão de clientes
 router.get('/',    authorize('admin'), listarClientes);
 router.get('/:id', authorize('admin'), getCliente);
-router.post('/',   authorize('admin'), criarCliente);
-router.put('/:id', authorize('admin'), atualizarCliente);
-router.delete('/:id', authorize('admin'), deletarCliente);
+router.post('/',   csrfProtection, authorize('admin'), criarCliente);
+router.put('/:id', csrfProtection, authorize('admin'), atualizarCliente);
+router.delete('/:id', csrfProtection, authorize('admin'), deletarCliente);
+router.patch('/:id/usuario', csrfProtection, authorize('admin'), vincularUsuario);
 
 // Vínculos com imóveis — só admin
-router.post('/:id/vinculos',              authorize('admin'), adicionarVinculo);
-router.delete('/:id/vinculos/:vinculoId', authorize('admin'), removerVinculo);
+router.post('/:id/vinculos',              csrfProtection, authorize('admin'), adicionarVinculo);
+router.delete('/:id/vinculos/:vinculoId', csrfProtection, authorize('admin'), removerVinculo);
 
 // Comentários — cliente e admin
-router.post('/:id/vinculos/:vinculoId/comentarios',                          adicionarComentario);
-router.delete('/:id/vinculos/:vinculoId/comentarios/:comentarioId',          removerComentario);
+router.post('/:id/vinculos/:vinculoId/comentarios', csrfProtection, adicionarComentario);
+router.delete('/:id/vinculos/:vinculoId/comentarios/:comentarioId', csrfProtection, removerComentario);
 
 module.exports = router;

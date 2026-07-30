@@ -1,4 +1,5 @@
 const Configuracao = require('../models/Configuracao');
+const logger = require('../utils/logger');
 
 // Dados iniciais — inseridos automaticamente na primeira execução
 const DEFAULTS = [
@@ -59,7 +60,7 @@ exports.seedConfiguracoes = async () => {
         const existe = await Configuracao.findOne({ chave: def.chave });
         if (!existe) {
             await Configuracao.create(def);
-            console.log(`[CONFIG] Criada configuração padrão: ${def.chave}`);
+            logger.info('configuration.seeded', { configKey: def.chave });
         }
     }
 };
