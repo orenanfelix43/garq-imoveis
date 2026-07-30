@@ -472,4 +472,10 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     initIcons();
+    document.addEventListener('click', event => {
+        const button = event.target.closest('[data-filter]');
+        if (!button) return;
+        const allowed = new Set(['todos', 'casa', 'terreno', 'apartamento']);
+        if (allowed.has(button.dataset.filter)) filterPortfolio(button.dataset.filter);
+    });
 });

@@ -1,6 +1,6 @@
 import { API_URL } from './config.js';
-import { esc, showToast, showConfirm } from './ui-helpers.js';
-import { apiFetch } from './api-fetch.js';
+import { esc, showToast, showConfirm, bindActions, isObjectId } from './ui-helpers.js';
+import { apiFetch, getCurrentUser } from './api-fetch.js';
 
 // =============================================================================
 // ESTADO
@@ -12,21 +12,24 @@ let vinculoAtual  = null; // vínculo com documentos aberto
 // INICIALIZAÇÃO
 // =============================================================================
 async function init() {
-    // Verificar se está logado como cliente
-    const role = localStorage.getItem('userRole');
-    if (!role) { window.location.href = 'login.html'; return; }
-    if (role === 'admin' || role === 'user') { window.location.href = 'admin.html'; return; }
-
-    loadUserDisplay();
+    const user = await getCurrentUser('cliente');
+    if (!user) { window.location.href = 'login.html'; return; }
+    loadUserDisplay(user);
     setupLogout();
+    bindActions(document, {
+        'fetch-area': () => fetchMinhaArea(),
+        'open-documents': data => isObjectId(data.id) && abrirDocumentos(data.id, data.title || ''),
+        'send-comment': data => isObjectId(data.clientId) && isObjectId(data.linkId) && enviarComentario(data.clientId, data.linkId),
+        'delete-comment': data => isObjectId(data.clientId) && isObjectId(data.linkId) && isObjectId(data.commentId) && excluirComentario(data.clientId, data.linkId, data.commentId),
+        'close-documents': () => fecharModalDocs(),
+    });
     await fetchMinhaArea();
     if (window.lucide) lucide.createIcons();
 }
 
-function loadUserDisplay() {
+function loadUserDisplay(user) {
     const nameEl = document.getElementById('user-name-display');
-    const name   = localStorage.getItem('userName');
-    if (nameEl && name) nameEl.textContent = name;
+    if (nameEl) nameEl.textContent = user.name;
 }
 
 function setupLogout() {
@@ -34,7 +37,6 @@ function setupLogout() {
     if (!btn) return;
     btn.onclick = async () => {
         try { await apiFetch(`${API_URL}/auth/logout`, { method: 'POST' }); } catch (_) {}
-        localStorage.clear();
         window.location.href = 'login.html';
     };
 }
@@ -70,7 +72,7 @@ async function fetchMinhaArea() {
             <div class="glass-panel rounded-2xl p-16 text-center flex flex-col items-center gap-4">
                 <i data-lucide="wifi-off" class="w-10 h-10 text-gray-700"></i>
                 <p class="text-[10px] text-gray-500 uppercase tracking-widest">Falha de conexão</p>
-                <button onclick="fetchMinhaArea()" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 transition-all">
+                <button data-action="fetch-area" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 transition-all">
                     Tentar novamente
                 </button>
             </div>`;
@@ -117,7 +119,7 @@ function renderPortfolio(cliente) {
                 <div class="md:w-72 h-56 md:h-auto overflow-hidden flex-shrink-0">
                     <img src="${esc(imgUrl)}" alt="${esc(imovel.titulo)}"
                          class="w-full h-full object-cover"
-                         onerror="this.src='assets/placeholder.webp'">
+                         data-fallback="true">
                 </div>
                 <div class="flex-1 p-8">
                     <div class="flex items-start justify-between gap-4 mb-4">
@@ -146,7 +148,7 @@ function renderPortfolio(cliente) {
 
                     <!-- Ações -->
                     <div class="flex gap-3 flex-wrap">
-                        <button onclick="abrirDocumentos('${esc(imovel._id)}', '${esc(imovel.titulo)}')"
+                        <button data-action="open-documents" data-id="${esc(imovel._id)}" data-title="${esc(imovel.titulo)}"
                             class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Documentos
                         </button>
@@ -178,7 +180,7 @@ function renderPortfolio(cliente) {
                         <textarea id="input-comentario-${esc(vinculo._id)}"
                             class="flex-1 bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-white placeholder-gray-600 resize-none focus:border-gold/40 outline-none transition-all"
                             rows="2" placeholder="Adicionar uma anotação sobre este imóvel..."></textarea>
-                        <button onclick="enviarComentario('${esc(cliente._id)}', '${esc(vinculo._id)}')"
+                        <button data-action="send-comment" data-client-id="${esc(cliente._id)}" data-link-id="${esc(vinculo._id)}"
                             class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 rounded-lg text-[10px] uppercase tracking-widest text-gold transition-all self-end">
                             <i data-lucide="send" class="w-3.5 h-3.5"></i>
                         </button>
@@ -214,7 +216,7 @@ function renderComentarios(comentarios, vinculoId) {
                 </div>
                 <p class="text-xs text-gray-300 leading-relaxed">${esc(c.texto)}</p>
             </div>
-            <button onclick="excluirComentario('${esc(clienteData._id)}', '${esc(vinculoId)}', '${esc(c._id)}')"
+            <button data-action="delete-comment" data-client-id="${esc(clienteData._id)}" data-link-id="${esc(vinculoId)}" data-comment-id="${esc(c._id)}"
                 class="opacity-0 group-hover:opacity-100 p-1 rounded text-red-500/40 hover:text-red-500 transition-all flex-shrink-0">
                 <i data-lucide="x" class="w-3 h-3"></i>
             </button>
@@ -359,7 +361,7 @@ function renderDocs(docs) {
                     <p class="text-[9px] text-gray-600 uppercase tracking-widest mt-0.5">${formatBytes(doc.tamanho)} · ${new Date(doc.createdAt).toLocaleDateString('pt-BR')}</p>
                 </div>
             </div>
-            <a href="${esc(doc.url)}" target="_blank" rel="noopener noreferrer"
+            <a href="${esc(doc.downloadPath)}" target="_blank" rel="noopener noreferrer"
                 class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0" title="Baixar">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
             </a>

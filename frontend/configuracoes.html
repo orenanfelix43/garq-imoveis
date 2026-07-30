@@ -39,7 +39,7 @@
             <i data-lucide="users" class="w-4 h-4"></i>
             <span class="text-xs uppercase tracking-widest">Clientes</span>
         </a>
-        <a href="configuracoes.html" class="flex items-center gap-3 p-3 rounded-lg bg-gold/10 text-gold border border-gold/20 group transition-all">
+            <a href="configuracoes.html" class="flex items-center gap-3 p-3 rounded-lg bg-gold/10 text-gold border border-gold/20 group transition-all">
             <i data-lucide="settings-2" class="w-4 h-4"></i>
             <span class="text-xs uppercase tracking-widest font-semibold">Configurações</span>
         </a>
@@ -65,10 +65,10 @@
             <h2 class="text-3xl font-serif uppercase tracking-tight">Configurações</h2>
         </div>
         <div class="flex gap-3">
-            <button onclick="abrirModalNovoUsuario()" class="flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs uppercase tracking-widest text-gray-300 hover:text-white transition-all">
+            <button data-action="open-new-user" class="flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs uppercase tracking-widest text-gray-300 hover:text-white transition-all">
                 <i data-lucide="user-plus" class="w-4 h-4"></i> Novo Usuário
             </button>
-            <button onclick="abrirModalNovaLista()" class="btn-primary flex items-center gap-2">
+            <button data-action="open-new-list" class="btn-primary flex items-center gap-2">
                 <i data-lucide="plus" class="w-4 h-4"></i> Nova Lista
             </button>
         </div>
@@ -106,7 +106,7 @@
     <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-gold/20">
         <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
             <h3 class="font-serif text-lg uppercase tracking-widest text-gold">Nova Lista</h3>
-            <button onclick="fecharModalNovaLista()" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
+            <button data-action="close-new-list" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
         </div>
         <div class="p-6 space-y-4">
             <div>
@@ -118,8 +118,8 @@
                 <input type="text" id="nova-lista-descricao" class="input-field" placeholder="Ex: Itens adicionais do imóvel">
             </div>
             <div class="flex justify-end gap-4 pt-2">
-                <button onclick="fecharModalNovaLista()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
-                <button onclick="criarLista()" class="btn-primary">Criar Lista</button>
+                <button data-action="close-new-list" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
+                <button data-action="create-list" class="btn-primary">Criar Lista</button>
             </div>
         </div>
     </div>
@@ -130,7 +130,7 @@
     <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-gold/20">
         <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
             <h3 class="font-serif text-lg uppercase tracking-widest text-gold">Novo Item</h3>
-            <button onclick="fecharModalNovoItem()" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
+            <button data-action="close-new-item" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
         </div>
         <div class="p-6 space-y-4">
             <div>
@@ -143,8 +143,8 @@
             </div>
             <p class="text-[9px] text-gray-600 uppercase tracking-widest">O valor interno é usado no banco de dados. Gerado automaticamente se deixado em branco.</p>
             <div class="flex justify-end gap-4 pt-2">
-                <button onclick="fecharModalNovoItem()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
-                <button onclick="adicionarItem()" class="btn-primary">Adicionar</button>
+                <button data-action="close-new-item" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
+                <button data-action="add-item" class="btn-primary">Adicionar</button>
             </div>
         </div>
     </div>
@@ -155,7 +155,7 @@
     <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-gold/20">
         <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
             <h3 class="font-serif text-lg uppercase tracking-widest text-gold">Novo Usuário</h3>
-            <button onclick="fecharModalNovoUsuario()" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
+            <button data-action="close-new-user" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
         </div>
         <div class="p-6 space-y-4">
             <div>
@@ -202,8 +202,8 @@
             </div>
             <div id="novo-user-erro" class="hidden text-[10px] text-red-400 uppercase tracking-widest"></div>
             <div class="flex justify-end gap-4 pt-2">
-                <button onclick="fecharModalNovoUsuario()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
-                <button onclick="criarUsuario()" class="btn-primary">Criar Usuário</button>
+                <button data-action="close-new-user" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
+                <button data-action="create-user" class="btn-primary">Criar Usuário</button>
             </div>
         </div>
     </div>
@@ -214,7 +214,7 @@
     <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border-gold/20">
         <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
             <h3 class="font-serif text-lg uppercase tracking-widest text-gold">Editar Usuário</h3>
-            <button onclick="fecharModalEditarUsuario()" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
+            <button data-action="close-edit-user" class="text-gray-400 hover:text-white transition"><i data-lucide="x"></i></button>
         </div>
         <div class="p-6 space-y-4">
             <input type="hidden" id="editar-user-id">
@@ -258,8 +258,8 @@
             </div>
             <div id="editar-user-erro" class="hidden text-[10px] text-red-400 uppercase tracking-widest"></div>
             <div class="flex justify-end gap-4 pt-2">
-                <button onclick="fecharModalEditarUsuario()" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
-                <button onclick="salvarEdicaoUsuario()" class="btn-primary">Salvar</button>
+                <button data-action="close-edit-user" class="px-5 py-2 text-xs uppercase tracking-widest text-gray-400 hover:text-white">Cancelar</button>
+                <button data-action="save-user" class="btn-primary">Salvar</button>
             </div>
         </div>
     </div>

@@ -1,6 +1,6 @@
 import { API_URL } from './config.js';
-import { esc, showToast, showConfirm } from './ui-helpers.js';
-import { apiFetch } from './api-fetch.js';
+import { esc, showToast, showConfirm, bindActions, isObjectId } from './ui-helpers.js';
+import { apiFetch, getCurrentUser } from './api-fetch.js';
 
 let configs       = [];
 let configAtualId = null;
@@ -22,19 +22,48 @@ function slugify(str) {
 // =============================================================================
 
 async function init() {
-    loadUserDisplay();
+    const user = await getCurrentUser('admin');
+    if (!user) { window.location.href = 'login.html'; return; }
+    loadUserDisplay(user);
     setupLogout();
+    bindActions(document, {
+        'new-item': data => isObjectId(data.id) && abrirModalNovoItem(data.id),
+        'delete-list': data => isObjectId(data.id) && deletarLista(data.id, data.title || ''),
+        'toggle-item': data => isObjectId(data.id) && isObjectId(data.itemId) && toggleItem(data.id, data.itemId, data.active === 'true'),
+        'remove-item': data => isObjectId(data.id) && isObjectId(data.itemId) && removerItem(data.id, data.itemId),
+        'edit-user': data => isObjectId(data.id) && abrirModalEditarUsuario(data.id, data.name || '', data.email || '', data.phone || '', data.role || ''),
+        'remove-user': data => isObjectId(data.id) && removerUsuario(data.id, data.name || ''),
+        'open-new-user': () => abrirModalNovoUsuario(),
+        'close-new-user': () => fecharModalNovoUsuario(),
+        'create-user': () => criarUsuario(),
+        'open-new-list': () => abrirModalNovaLista(),
+        'close-new-list': () => fecharModalNovaLista(),
+        'create-list': () => criarLista(),
+        'close-new-item': () => fecharModalNovoItem(),
+        'add-item': () => adicionarItem(),
+        'close-edit-user': () => fecharModalEditarUsuario(),
+        'save-user': () => salvarEdicaoUsuario(),
+    });
+    document.addEventListener('focusout', event => {
+        const field = event.target.closest('[data-edit-label]');
+        if (field && isObjectId(field.dataset.id) && isObjectId(field.dataset.itemId)) {
+            salvarLabelInline(event, field.dataset.id, field.dataset.itemId);
+        }
+    });
+    document.addEventListener('keydown', event => {
+        if (event.target.matches('[data-edit-label]') && event.key === 'Enter') {
+            event.preventDefault(); event.target.blur();
+        }
+    });
     await Promise.all([fetchConfigs(), fetchUsuarios()]);
     if (window.lucide) lucide.createIcons();
 }
 
-function loadUserDisplay() {
-    const userName = localStorage.getItem('userName');
-    const userRole = localStorage.getItem('userRole');
+function loadUserDisplay(user) {
     const nameEl   = document.getElementById('user-name-display');
     const roleEl   = document.getElementById('user-role-display');
-    if (userName && nameEl) nameEl.textContent = userName;
-    if (userRole && roleEl) roleEl.textContent = userRole;
+    if (nameEl) nameEl.textContent = user.name;
+    if (roleEl) roleEl.textContent = user.role;
 }
 
 function setupLogout() {
@@ -44,7 +73,6 @@ function setupLogout() {
         const ok = await showConfirm('Deseja realmente sair do painel?');
         if (!ok) return;
         try { await apiFetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
-        localStorage.clear();
         window.location.href = 'login.html';
     };
 }
@@ -89,11 +117,11 @@ function renderConfigs(container, data) {
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="abrirModalNovoItem('${esc(config._id)}')"
+                    <button data-action="new-item" data-id="${esc(config._id)}"
                         class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i> Adicionar Item
                     </button>
-                    <button onclick="deletarLista('${esc(config._id)}', '${esc(config.titulo)}')"
+                    <button data-action="delete-list" data-id="${esc(config._id)}" data-title="${esc(config.titulo)}"
                         class="p-2 rounded-lg text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all" title="Excluir lista">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
@@ -122,7 +150,7 @@ function renderItens(config) {
         <div class="flex items-center justify-between px-6 py-3 hover:bg-white/[0.02] transition-all group" id="item-row-${esc(item._id)}">
             <div class="flex items-center gap-4 min-w-0">
                 <!-- Toggle ativo/inativo -->
-                <button onclick="toggleItem('${esc(config._id)}', '${esc(item._id)}', ${!item.ativo})"
+                <button data-action="toggle-item" data-id="${esc(config._id)}" data-item-id="${esc(item._id)}" data-active="${String(!item.ativo)}"
                     class="w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0
                     ${item.ativo ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-white/5 text-gray-600 hover:bg-white/10'}"
                     title="${item.ativo ? 'Ativo — clique para desativar' : 'Inativo — clique para ativar'}">
@@ -133,15 +161,14 @@ function renderItens(config) {
                     <p class="text-xs font-medium text-white ${!item.ativo ? 'line-through text-gray-500' : ''}"
                        contenteditable="true"
                        spellcheck="false"
-                       onblur="salvarLabelInline(event, '${esc(config._id)}', '${esc(item._id)}')"
-                       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                       data-edit-label="true" data-id="${esc(config._id)}" data-item-id="${esc(item._id)}"
                        title="Clique para editar o label">
                         ${esc(item.label)}
                     </p>
                     <p class="text-[9px] text-gray-600 uppercase tracking-widest mt-0.5">valor: ${esc(item.valor)}</p>
                 </div>
             </div>
-            <button onclick="removerItem('${esc(config._id)}', '${esc(item._id)}')"
+            <button data-action="remove-item" data-id="${esc(config._id)}" data-item-id="${esc(item._id)}"
                 class="p-1.5 rounded text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0" title="Remover item">
                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>
@@ -399,11 +426,11 @@ function renderUsuarios(container, usuarios) {    if (!usuarios || usuarios.leng
                 <span class="text-[8px] uppercase tracking-widest font-bold border px-3 py-1.5 rounded ${roleStyle(u.role)}">
                     ${esc(u.role)}
                 </span>
-                <button onclick="abrirModalEditarUsuario('${esc(u._id)}', '${esc(u.name)}', '${esc(u.email)}', '${esc(u.phone || '')}', '${esc(u.role)}')"
+                <button data-action="edit-user" data-id="${esc(u._id)}" data-name="${esc(u.name)}" data-email="${esc(u.email)}" data-phone="${esc(u.phone || '')}" data-role="${esc(u.role)}"
                     class="p-1.5 rounded text-gold/40 hover:text-gold hover:bg-white/5 transition-all opacity-0 group-hover:opacity-100" title="Editar usuário">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                 </button>
-                <button onclick="removerUsuario('${esc(u._id)}', '${esc(u.name)}')"
+                <button data-action="remove-user" data-id="${esc(u._id)}" data-name="${esc(u.name)}"
                     class="p-1.5 rounded text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100" title="Remover usuário">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 </button>
@@ -452,7 +479,7 @@ async function salvarEdicaoUsuario() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/${id}`, {
+        const response = await apiFetch(`${API_URL}/usuarios/${id}`, {
             method:      'PATCH',
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',

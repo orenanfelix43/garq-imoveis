@@ -1,103 +1,47 @@
-const jwt  = require('jsonwebtoken');
-const User = require('../models/User');
+const Session = require('../models/Session');
+const { hash } = require('../services/sessionService');
+const crypto = require('crypto');
 
-// ─── Helper interno: extrai token do cookie ou header Authorization ───────────
-function extractToken(req) {
-    if (req.cookies?.token) return req.cookies.token;
+async function protect(req, res, next) {
+    const token = req.cookies?.garq_session;
+    if (!token) return res.status(401).json({ success: false, error: 'Sessão não fornecida.' });
 
-    const authHeader = req.headers.authorization;
-    if (authHeader && /^Bearer\s+\S+/.test(authHeader)) {
-        return authHeader.split(/\s+/)[1];
-    }
+    try {
+        const session = await Session.findOne({
+            tokenHash: hash(token),
+            revokedAt: null,
+            expiresAt: { $gt: new Date() },
+        }).select('+tokenHash +csrfHash').populate('userId', 'name role').exec();
 
-    return null;
+        if (!session?.userId) {
+            return res.status(401).json({ success: false, error: 'Sessão inválida ou expirada.' });
+        }
+        req.sessionRecord = session;
+        req.user = { id: session.userId._id.toString(), role: session.userId.role, name: session.userId.name || '' };
+        Session.updateOne({ _id: session._id }, { lastUsedAt: new Date() }).catch(() => {});
+        next();
+    } catch (error) { next(error); }
 }
 
-// =============================================================================
-// protect — leve, sem query ao banco
-// Confia nos dados do payload JWT (id + role já estão assinados).
-// Usar em todas as rotas comuns: CRUD de imóveis, documentos, configurações.
-// =============================================================================
-const protect = (req, res, next) => {
-    const token = extractToken(req);
+const protectStrict = protect;
 
-    if (!token) {
-        return res.status(401).json({ success: false, error: 'Token não fornecido.' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        req.user = {
-            id:   decoded.id,
-            role: decoded.role,
-            name: decoded.name || '',
-        };
-
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`[AUTH] id=${decoded.id} role=${decoded.role} → ${req.method} ${req.originalUrl}`);
-        }
-
-        next();
-    } catch (err) {
-        const message = err.name === 'TokenExpiredError'
-            ? 'Token expirado. Faça login novamente.'
-            : 'Token inválido.';
-        return res.status(401).json({ success: false, error: message });
-    }
-};
-
-// =============================================================================
-// protectStrict — com query ao banco
-// Verifica se o usuário ainda existe e não foi desativado/deletado.
-// Usar apenas em operações críticas e irreversíveis:
-//   - troca de senha, exclusão de conta, elevação de role.
-// Custo: +1 query MongoDB por request — usar com critério.
-// =============================================================================
-const protectStrict = async (req, res, next) => {
-    const token = extractToken(req);
-
-    if (!token) {
-        return res.status(401).json({ success: false, error: 'Token não fornecido.' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        const user = await User.findById(decoded.id).select('role').lean();
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'Usuário não encontrado. Faça login novamente.',
-            });
-        }
-
-        req.user = {
-            id:   decoded.id,
-            role: user.role,
-        };
-
-        next();
-    } catch (err) {
-        const message = err.name === 'TokenExpiredError'
-            ? 'Token expirado. Faça login novamente.'
-            : 'Token inválido.';
-        return res.status(401).json({ success: false, error: message });
-    }
-};
-
-// =============================================================================
-// authorize — RBAC baseado em role
-// Deve vir sempre após protect ou protectStrict na cadeia de middlewares.
-// =============================================================================
 const authorize = (...roles) => (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
-        return res.status(403).json({
-            success: false,
-            error: `Acesso negado. Requer role: ${roles.join(', ')}.`,
-        });
+        return res.status(403).json({ success: false, error: 'Acesso negado.' });
     }
     next();
 };
 
-module.exports = { protect, protectStrict, authorize };
+function csrfProtection(req, res, next) {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+    if (!req.sessionRecord) return res.status(401).json({ success: false, error: 'Sessão inválida.' });
+    const submitted = req.get('x-csrf-token');
+    const submittedHash = submitted ? Buffer.from(hash(submitted), 'hex') : Buffer.alloc(0);
+    const expectedHash = Buffer.from(req.sessionRecord.csrfHash || '', 'hex');
+    if (submittedHash.length !== expectedHash.length || !crypto.timingSafeEqual(submittedHash, expectedHash)) {
+        return res.status(403).json({ success: false, error: 'Validação CSRF falhou.' });
+    }
+    next();
+}
+
+module.exports = { protect, protectStrict, authorize, csrfProtection };

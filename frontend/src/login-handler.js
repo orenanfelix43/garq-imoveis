@@ -39,11 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.success) {
-                localStorage.clear();
-                localStorage.setItem('userName', result.user.name);
-                localStorage.setItem('userRole', result.user.role || 'user');
-                if (result.token) localStorage.setItem('authToken', result.token);
-
                 // Redirecionar por role
                 const role = result.user.role;
                 if (role === 'admin' || role === 'user') {

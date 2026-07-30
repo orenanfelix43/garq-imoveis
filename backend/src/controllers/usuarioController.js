@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Session = require('../models/Session');
 
 // ─── Listar usuários (sem retornar senha) ─────────────────────────────────────
 exports.listarUsuarios = async (req, res, next) => {
@@ -38,6 +39,8 @@ exports.atualizarUsuario = async (req, res, next) => {
             return res.status(404).json({ success: false, error: 'Usuário não encontrado.' });
         }
 
+        await Session.updateMany({ userId: usuario._id, revokedAt: null }, { revokedAt: new Date() });
+
         return res.json({ success: true, data: usuario });
     } catch (err) {
         next(err);
@@ -74,6 +77,9 @@ exports.alterarRole = async (req, res, next) => {
             return res.status(404).json({ success: false, error: 'Usuário não encontrado.' });
         }
 
+
+        await Session.updateMany({ userId: usuario._id, revokedAt: null }, { revokedAt: new Date() });
+
         return res.json({ success: true, data: usuario });
     } catch (err) {
         next(err);
@@ -93,6 +99,8 @@ exports.removerUsuario = async (req, res, next) => {
         if (!usuario) {
             return res.status(404).json({ success: false, error: 'Usuário não encontrado.' });
         }
+
+        await Session.updateMany({ userId: usuario._id, revokedAt: null }, { revokedAt: new Date() });
 
         return res.json({ success: true, message: 'Usuário removido com sucesso.' });
     } catch (err) {

@@ -43,7 +43,7 @@ projeto-garq/
 | Framework | Express | Roteamento e middleware |
 | Banco de Dados | MongoDB Atlas | Persistência de dados |
 | ODM | Mongoose | Modelagem de dados |
-| Autenticação | jsonwebtoken | Tokens JWT stateless |
+| Autenticação | Sessão opaca | Cookie httpOnly e sessão revogável no MongoDB |
 | Hash de Senha | bcryptjs | Criptografia de senhas |
 | E-mail | Resend | Envio via HTTP |
 | Upload | Cloudinary | Imagens e documentos |
@@ -105,8 +105,8 @@ O `config.js` detecta o ambiente automaticamente — localhost aponta para a API
 ## Modelo de Segurança
 
 - Senhas com hash bcryptjs antes da persistência
-- Tokens JWT stateless com expiração configurável
-- Middleware de autenticação em duas camadas (leve e estrito)
+- Sessões opacas revogáveis; somente o hash do token é persistido
+- Cookie httpOnly/Secure em produção e proteção CSRF vinculada à sessão
 - RBAC — controle de acesso por role em operações sensíveis
 - Rate limiting em rotas de autenticação
 - Body limits diferenciados por grupo de rotas

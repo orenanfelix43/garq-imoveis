@@ -6,11 +6,12 @@ const {
     register,
     login,
     logout,
+    getSession,
     forgotPassword,
     resetPassword,
 } = require('../controllers/authController');
 
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, csrfProtection } = require('../middleware/auth');
 
 // ─── Rate limiters ────────────────────────────────────────────────────────────
 
@@ -48,11 +49,12 @@ const resetLimiter = rateLimit({
 router.post('/register', (req, res, next) => {
     const role = req.body?.role;
     if (role === 'cliente') return next(); // auto-cadastro público
-    return protect(req, res, () => authorize('admin')(req, res, next));
+    return protect(req, res, () => csrfProtection(req, res, () => authorize('admin')(req, res, next)));
 }, register);
 
 router.post('/login',           loginLimiter, login);
-router.post('/logout',          logout);
+router.get('/session',          protect, getSession);
+router.post('/logout',          protect, csrfProtection, logout);
 router.post('/forgot-password', forgotLimiter, forgotPassword);
 router.post('/reset-password',  resetLimiter,  resetPassword);
 

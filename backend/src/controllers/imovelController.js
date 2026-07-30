@@ -2,6 +2,7 @@ const Imovel     = require('../models/Imovel');
 const mongoose   = require('mongoose');
 const cloudinary = require('../config/cloudinary');
 const Joi        = require('joi');
+const logger     = require('../utils/logger');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -40,34 +41,43 @@ const imovelSchema = Joi.object({
         'array.max': 'Máximo de 15 imagens por imóvel.',
     }),
 });
+const imovelUpdateSchema = imovelSchema
+    .fork(['titulo', 'subtitulo', 'tipo', 'descricaoLonga'], schema => schema.optional())
+    .min(1);
 
 // ─── Limites de segurança por imagem ─────────────────────────────────────────
-const MAX_B64_BYTES = 4 * 1024 * 1024; // ~3 MB por imagem em base64
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const IMAGE_DATA = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
+const IMAGE_SIGNATURES = {
+    'image/jpeg': Buffer.from([0xff, 0xd8, 0xff]),
+    'image/png': Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    'image/webp': Buffer.from('RIFF'),
+};
+
+function validateImage(dataUrl) {
+    const match = IMAGE_DATA.exec(dataUrl);
+    if (!match) throw new Error('Imagem inválida. Use JPEG, PNG ou WebP; SVG não é permitido.');
+    const bytes = Buffer.from(match[2], 'base64');
+    if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) throw new Error('Uma imagem excede o limite real de 3 MB.');
+    const signature = IMAGE_SIGNATURES[match[1]];
+    const validWebp = match[1] !== 'image/webp' || bytes.subarray(8, 12).toString('ascii') === 'WEBP';
+    if (!bytes.subarray(0, signature.length).equals(signature) || !validWebp) throw new Error('Assinatura de imagem inválida.');
+}
 
 const uploadGaleria = async (galeria) => {
     if (!galeria || galeria.length === 0) return [];
-
     return pLimit(galeria, async (item) => {
-        if (!item.url?.startsWith('data:')) return item; // URL já hospedada, não reenviar
-
-        if (item.url.length > MAX_B64_BYTES) {
-            throw new Error('Uma das imagens excede o tamanho máximo permitido (3 MB). Comprima antes de enviar.');
+        if (!item.url?.startsWith('data:')) {
+            if (!/^https:\/\/res\.cloudinary\.com\//i.test(item.url || '')) throw new Error('URL externa de imagem não permitida.');
+            return item;
         }
-
+        validateImage(item.url);
         const result = await cloudinary.uploader.upload(item.url, {
-            folder:        'imoveis_projeto',
-            resource_type: 'image',
-            timeout:       20000,        // 20 s por upload — evita uploads pendurados
-            quality:       'auto:good',  // compressão automática pelo Cloudinary
-            fetch_format:  'auto',       // entrega WebP em browsers modernos
+            folder: 'imoveis_projeto', resource_type: 'image', timeout: 20000,
+            quality: 'auto:good', fetch_format: 'auto',
         });
-
-        return {
-            ...item,
-            url:       result.secure_url,
-            public_id: result.public_id,
-        };
-    }, 3); // máximo 3 uploads simultâneos
+        return { ...item, url: result.secure_url, public_id: result.public_id };
+    }, 3);
 };
 
 // =============================================================================
@@ -93,8 +103,9 @@ exports.criarImovel = async (req, res) => {
 
         res.status(201).json({ success: true, data: novoImovel });
     } catch (error) {
-        console.error('[criarImovel]', error.message);
-        res.status(400).json({ success: false, error: error.message });
+        logger.error('property.create_failed', { requestId: req.id, errorName: error.name });
+        const safe = /^(Imagem inválida|Uma imagem excede|Assinatura de imagem|URL externa)/.test(error.message || '');
+        res.status(400).json({ success: false, error: safe ? error.message : 'Não foi possível validar ou enviar as imagens.' });
     }
 };
 
@@ -173,7 +184,7 @@ exports.getImovel = async (req, res) => {
         if (!isValidId(req.params.id)) {
             return res.status(400).json({ success: false, error: 'ID inválido.' });
         }
-        const imovel = await Imovel.findById(req.params.id).lean();
+        const imovel = await Imovel.findOne({ _id: req.params.id, isVisible: true }).lean();
         if (!imovel) {
             return res.status(404).json({ success: false, error: 'Imóvel não encontrado.' });
         }
@@ -200,7 +211,7 @@ exports.atualizarImovel = async (req, res) => {
             return res.status(403).json({ success: false, error: 'Sem permissão.' });
         }
 
-        const { error, value } = imovelSchema.validate(req.body, { stripUnknown: true, abortEarly: false, presence: 'optional' });
+        const { error, value } = imovelUpdateSchema.validate(req.body, { stripUnknown: true, abortEarly: false, noDefaults: true });
         if (error) {
             return res.status(400).json({
                 success: false,
@@ -220,8 +231,9 @@ exports.atualizarImovel = async (req, res) => {
 
         res.status(200).json({ success: true, data: atualizado });
     } catch (error) {
-        console.error('[atualizarImovel]', error.message);
-        res.status(400).json({ success: false, error: error.message });
+        logger.error('property.update_failed', { requestId: req.id, propertyId: req.params.id, errorName: error.name });
+        const safe = /^(Imagem inválida|Uma imagem excede|Assinatura de imagem|URL externa)/.test(error.message || '');
+        res.status(400).json({ success: false, error: safe ? error.message : 'Não foi possível validar ou enviar as imagens.' });
     }
 };
 
@@ -252,7 +264,7 @@ exports.deletarImovel = async (req, res) => {
         await imovel.deleteOne();
         res.status(200).json({ success: true, data: {} });
     } catch (error) {
-        console.error('[deletarImovel]', error.message);
+        logger.error('property.delete_failed', { requestId: req.id, propertyId: req.params.id, errorName: error.name });
         res.status(500).json({ success: false, error: 'Erro ao deletar imóvel.' });
     }
 };
@@ -286,7 +298,7 @@ exports.setDestaque = async (req, res) => {
         res.status(200).json({ success: true, data: imovelDestaque });
     } catch (error) {
         await session.abortTransaction();
-        console.error('[setDestaque]', error.message);
+        logger.error('property.feature_failed', { requestId: req.id, propertyId: req.params.id, errorName: error.name });
         res.status(500).json({ success: false, error: 'Erro ao definir destaque.' });
     } finally {
         session.endSession();
@@ -312,7 +324,7 @@ exports.toggleVisibilidade = async (req, res) => {
 
         res.status(200).json({ success: true, data: { isVisible: imovel.isVisible } });
     } catch (error) {
-        console.error('[toggleVisibilidade]', error.message);
+        logger.error('property.visibility_failed', { requestId: req.id, propertyId: req.params.id, errorName: error.name });
         res.status(500).json({ success: false, error: 'Erro ao alterar visibilidade.' });
     }
 };

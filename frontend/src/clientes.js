@@ -1,6 +1,6 @@
 import { API_URL } from './config.js';
-import { esc, showToast, showConfirm } from './ui-helpers.js';
-import { apiFetch } from './api-fetch.js';
+import { esc, showToast, showConfirm, bindActions, isObjectId } from './ui-helpers.js';
+import { apiFetch, getCurrentUser } from './api-fetch.js';
 
 // =============================================================================
 // ESTADO
@@ -13,20 +13,32 @@ let clienteAtual  = null; // cliente aberto no modal de detalhe
 // INICIALIZAÇÃO
 // =============================================================================
 async function init() {
-    loadUserDisplay();
+    const user = await getCurrentUser('admin');
+    if (!user) { window.location.href = 'login.html'; return; }
+    loadUserDisplay(user);
     setupLogout();
     setupSearch();
+    bindActions(document, {
+        'fetch-clients': () => fetchClientes(),
+        'open-client': data => isObjectId(data.id) && abrirDetalhe(data.id),
+        'remove-link': data => isObjectId(data.id) && removerVinculo(data.id),
+        'open-client-modal': () => abrirModalCliente(),
+        'close-client-modal': () => fecharModalCliente(),
+        'save-client': () => salvarCliente(),
+        'close-client-detail': () => fecharModalDetalhe(),
+        'open-link-modal': () => abrirModalVinculo(),
+        'close-link-modal': () => fecharModalVinculo(),
+        'confirm-link': () => confirmarVinculo(),
+    });
     await Promise.all([fetchClientes(), fetchImoveis()]);
     if (window.lucide) lucide.createIcons();
 }
 
-function loadUserDisplay() {
-    const userName = localStorage.getItem('userName');
-    const userRole = localStorage.getItem('userRole');
+function loadUserDisplay(user) {
     const nameEl   = document.getElementById('user-name-display');
     const roleEl   = document.getElementById('user-role-display');
-    if (userName && nameEl) nameEl.textContent = userName;
-    if (userRole && roleEl) roleEl.textContent = userRole;
+    if (nameEl) nameEl.textContent = user.name;
+    if (roleEl) roleEl.textContent = user.role;
 }
 
 function setupLogout() {
@@ -36,7 +48,6 @@ function setupLogout() {
         const ok = await showConfirm('Deseja realmente sair do painel?');
         if (!ok) return;
         try { await apiFetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
-        localStorage.clear();
         window.location.href = 'login.html';
     };
 }
@@ -85,7 +96,7 @@ async function fetchClientes() {
                 <div class="p-16 text-center flex flex-col items-center gap-4">
                     <i data-lucide="wifi-off" class="w-8 h-8 text-gray-700"></i>
                     <p class="text-[10px] text-gray-500 uppercase tracking-widest">Falha de conexão</p>
-                    <button onclick="fetchClientes()" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
+                    <button data-action="fetch-clients" class="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] uppercase tracking-widest text-gray-300 hover:text-white transition-all">
                         Tentar novamente
                     </button>
                 </div>`;
@@ -138,7 +149,7 @@ function renderClientes(data) {
 
         return `
         <div class="p-5 flex items-center justify-between hover:bg-white/[0.02] transition-all group cursor-pointer"
-             onclick="abrirDetalhe('${esc(c._id)}')">
+             data-action="open-client" data-id="${esc(c._id)}">
             <div class="flex items-center gap-4 min-w-0">
                 <div class="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
                     <span class="text-xs font-bold text-gold uppercase">${esc(c.nome.charAt(0))}</span>
@@ -216,7 +227,7 @@ async function salvarCliente() {
         const url    = id ? `${API_URL}/clientes/${id}` : `${API_URL}/clientes`;
         const method = id ? 'PUT' : 'POST';
 
-        const res = await fetch(url, {
+        const res = await apiFetch(url, {
             method,
             headers:     { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -335,7 +346,7 @@ function renderVinculos(vinculos) {
         <div class="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group">
             <div class="flex items-center gap-3 min-w-0">
                 <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white/5 border border-white/10">
-                    <img src="${esc(imgUrl)}" class="w-full h-full object-cover" onerror="this.src='assets/placeholder.webp'">
+                    <img src="${esc(imgUrl)}" class="w-full h-full object-cover" data-fallback="true">
                 </div>
                 <div class="min-w-0">
                     <p class="text-xs font-medium text-white truncate">${esc(imovel.titulo)}</p>
@@ -346,7 +357,7 @@ function renderVinculos(vinculos) {
                     ${v.observacao ? `<p class="text-[9px] text-gray-600 italic mt-0.5 truncate">${esc(v.observacao)}</p>` : ''}
                 </div>
             </div>
-            <button onclick="removerVinculo('${esc(v._id)}')"
+            <button data-action="remove-link" data-id="${esc(v._id)}"
                 class="p-1.5 rounded text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0" title="Remover vínculo">
                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>

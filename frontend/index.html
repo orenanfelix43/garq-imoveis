@@ -106,14 +106,14 @@
                     </button>
                     <div id="portfolio-menu" role="menu"
                         class="absolute top-full left-0 bg-black/95 backdrop-blur-md border border-white/10 p-6 min-w-[200px] flex flex-col gap-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-2xl">
-                        <button onclick="filterPortfolio('casa')" role="menuitem"
+                        <button data-filter="casa" role="menuitem"
                             class="text-left hover:text-gold transition-colors">Casas</button>
-                        <button onclick="filterPortfolio('terreno')" role="menuitem"
+                        <button data-filter="terreno" role="menuitem"
                             class="text-left hover:text-gold transition-colors">Terrenos</button>
-                        <button onclick="filterPortfolio('apartamento')" role="menuitem"
+                        <button data-filter="apartamento" role="menuitem"
                             class="text-left hover:text-gold transition-colors">Apartamentos</button>
                         <hr class="border-white/10">
-                        <button onclick="filterPortfolio('todos')" role="menuitem"
+                        <button data-filter="todos" role="menuitem"
                             class="text-left text-gold/60 hover:text-gold transition-colors italic">Ver Todos</button>
                     </div>
                 </div>
@@ -213,13 +213,13 @@
                 </div>
 
                 <div class="flex justify-center gap-4 mb-16 overflow-x-auto pb-4" role="group" aria-label="Filtros de categoria">
-                    <button onclick="filterPortfolio('todos')" class="filter-btn active"
+                    <button data-filter="todos" class="filter-btn active"
                         data-filter="todos" aria-pressed="true">Todos</button>
-                    <button onclick="filterPortfolio('casa')" class="filter-btn"
+                    <button data-filter="casa" class="filter-btn"
                         data-filter="casa" aria-pressed="false">Casas</button>
-                    <button onclick="filterPortfolio('terreno')" class="filter-btn"
+                    <button data-filter="terreno" class="filter-btn"
                         data-filter="terreno" aria-pressed="false">Terrenos</button>
-                    <button onclick="filterPortfolio('apartamento')" class="filter-btn"
+                    <button data-filter="apartamento" class="filter-btn"
                         data-filter="apartamento" aria-pressed="false">Apartamentos</button>
                 </div>
 
@@ -373,7 +373,7 @@
     <section id="detail-page" class="hidden pt-40 pb-24 bg-white text-black min-h-screen fade-in"
         aria-label="Detalhe do imóvel">
         <div class="max-w-7xl mx-auto px-8">
-            <button onclick="filterPortfolio('todos')"
+            <button data-filter="todos"
                 class="mb-12 flex items-center text-[10px] uppercase tracking-[0.4em] font-bold text-gray-400 hover:text-gold transition"
                 aria-label="Voltar para o portfólio">
                 <i data-lucide="arrow-left" class="w-4 h-4 mr-2" aria-hidden="true"></i> Voltar para o Portfólio

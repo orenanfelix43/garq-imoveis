@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test --test-concurrency=1",
+    "lint": "node scripts/lint.js",
+    "build": "node --check src/app.js",
     "start": "node src/app.js",
     "dev": "nodemon src/app.js"
   },
@@ -19,16 +21,21 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.3.2",
+    "express-rate-limit": "^8.6.1",
     "helmet": "^8.1.0",
-    "joi": "^18.1.2",
-    "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.3.3",
-    "multer": "^2.1.1",
-    "resend": "^6.12.4",
-    "winston": "^3.19.0"
+    "joi": "^18.2.3",
+    "mongoose": "^8.24.2",
+    "resend": "^6.12.4"
+  },
+  "overrides": {
+    "body-parser": "2.3.0",
+    "qs": "6.15.3",
+    "brace-expansion": "5.0.9"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "jsdom": "^26.1.0",
+    "mongodb-memory-server": "^10.4.3",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }

@@ -58,11 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.success) {
                 // Salvar sessão e redirecionar
-                localStorage.clear();
-                localStorage.setItem('userName', result.user.name);
-                localStorage.setItem('userRole', result.user.role);
-                if (result.token) localStorage.setItem('authToken', result.token);
-
                 window.location.href = 'area-cliente.html';
             } else {
                 mostrarErro(result.error || 'Erro ao criar conta. Tente novamente.');
